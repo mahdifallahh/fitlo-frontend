@@ -1,0 +1,241 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+import ExerciseSelector from "../../components/ExerciseSelector";
+import { Exercise, SelectedExercise } from "../../types/exercise";
+import SmartList from "../../components/SmartList";
+import ConfirmModal from "../../components/ConfirmModal";
+import ProgramDetailsModal from "../../components/ProgramDetailsModal";
+
+const daysOfWeek = [
+  "روز اول",
+  "روز دوم",
+  "روز سوم",
+  "روز چهارم",
+  "روز پنجم",
+  "روز ششم",
+  "روز هفتم",
+];
+
+interface Program {
+  _id: string;
+  studentId: {
+    name: string;
+    phone: string;
+  };
+  days: {
+    day: string;
+    exercises: {
+      name: string;
+      sets: number;
+      reps: number;
+      gifUrl?: string;
+      videoLink?: string;
+      categoryName?: string;
+    }[];
+  }[];
+}
+
+export default function Programs() {
+  const token = localStorage.getItem("token");
+  const [students, setStudents] = useState<any[]>([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState("");
+  const [selectedDay, setSelectedDay] = useState("روز اول");
+  const [programDays, setProgramDays] = useState<
+    { day: string; exercises: SelectedExercise[] }[]
+  >([]);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+  const [refreshFlag, setRefreshFlag] = useState(Date.now());
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const headers = { Authorization: `Bearer ${token}` };
+      const [usersRes, exsRes] = await Promise.all([
+        axios.get("http://localhost:3000/users/students", { headers }),
+        axios.get("http://localhost:3000/exercises", { headers }),
+      ]);
+      setStudents(usersRes.data?.items || []);
+      setExercises(exsRes.data?.items || []);
+    };
+
+    fetchData();
+  }, []);
+
+  const handleSaveDay = (dayExercises: SelectedExercise[]) => {
+    setProgramDays((prev) => {
+      const newDays = prev.filter((d) => d.day !== selectedDay);
+      return [...newDays, { day: selectedDay, exercises: dayExercises }];
+    });
+
+    const currentIndex = daysOfWeek.indexOf(selectedDay);
+    if (currentIndex < daysOfWeek.length - 1) {
+      setSelectedDay(daysOfWeek[currentIndex + 1]);
+    }
+  };
+
+  const handleSubmitFullProgram = async () => {
+    if (!selectedStudent) return;
+
+    try {
+      await axios.post(
+        "http://localhost:3000/programs",
+        {
+          studentId: selectedStudent,
+          days: programDays,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      alert("برنامه ذخیره شد ✅");
+      setProgramDays([]);
+      setSelectedDay("روز اول");
+      setRefreshFlag(Date.now());
+    } catch (err) {
+      alert("خطا در ذخیره برنامه ❌");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirmId) return;
+    try {
+      await axios.delete(`http://localhost:3000/programs/${confirmId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setRefreshFlag(Date.now());
+    } catch {
+      alert("❌ خطا در حذف برنامه");
+    } finally {
+      setConfirmId(null);
+    }
+  };
+
+  const handleView = async (id: string) => {
+    try {
+      const { data } = await axios.get(`http://localhost:3000/programs/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSelectedProgram(data);
+    } catch {
+      alert("❌ خطا در دریافت اطلاعات برنامه");
+    }
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto p-4 space-y-10 text-black">
+      <h1 className="text-2xl font-bold text-center text-blue-700 mb-6">
+        📆 ساخت برنامه تمرینی هفتگی
+      </h1>
+
+      {/* فرم ساخت برنامه */}
+      <div className="bg-white p-6 rounded-xl shadow space-y-6">
+        {/* شاگرد */}
+        <div>
+          <label className="block font-bold mb-1 text-black ">
+            👤 انتخاب شاگرد
+          </label>
+          <select
+            className="w-full border p-3 rounded-xl border border-blue-300 text-blue-900 bg-white placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+            value={selectedStudent}
+            onChange={(e) => setSelectedStudent(e.target.value)}
+          >
+            <option value="">-- انتخاب شاگرد --</option>
+            {students.map((s) => (
+              <option key={s._id} value={s._id}>
+                {s.name || "---"} - {s.phone}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* روز */}
+        <div>
+          <label className="block font-bold mb-1 text-black">
+            🗓️ انتخاب روز
+          </label>
+          <select
+            className="w-full border p-3 rounded-xl border border-blue-300 text-blue-900 bg-white placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+            value={selectedDay}
+            onChange={(e) => setSelectedDay(e.target.value)}
+          >
+            {daysOfWeek.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* انتخاب تمرین */}
+        <ExerciseSelector
+          allExercises={exercises}
+          defaultSelected={(
+            programDays.find((d) => d.day === selectedDay)?.exercises || []
+          ).map((ex) => ({
+            _id: ex._id,
+            name: ex.name,
+            gifUrl: ex.gifUrl,
+            videoLink: ex.videoLink,
+            sets: ex.sets ?? 0,
+            reps: ex.reps ?? 0,
+            categoryId: ex.categoryId,
+          }))}
+          onSave={handleSaveDay}
+        />
+
+        {/* ذخیره نهایی */}
+        <div className="text-left pt-4">
+          <button
+            onClick={handleSubmitFullProgram}
+            className="bg-green-600 text-white px-6 py-2 rounded-xl hover:bg-green-700 transition font-bold"
+          >
+            💾 ذخیره برنامه تمرینی
+          </button>
+        </div>
+      </div>
+
+      {/* لیست برنامه‌های ذخیره شده */}
+      <SmartList<Program>
+        key={refreshFlag.toString()}
+        url="http://localhost:3000/programs"
+        title="📋 لیست برنامه‌های من"
+        token={token || ""}
+        searchPlaceholder="جستجو بر اساس نام یا شماره شاگرد..."
+        columns={[
+          {
+            label: "👤 نام شاگرد",
+            render: (item) => item.studentId?.name || "---",
+          },
+          {
+            label: "📞 شماره",
+            render: (item) => item.studentId?.phone || "---",
+          },
+          {
+            label: "✅ تعداد روزها",
+            render: (item) => `${item.days.length} روز`,
+          },
+        ]}
+        onDelete={(id) => setConfirmId(id)}
+        onEdit={(item) => handleView(item._id)}
+      />
+
+      <ConfirmModal
+        open={!!confirmId}
+        message="آیا از حذف این برنامه مطمئن هستید؟"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmId(null)}
+        confirmText="حذف"
+        cancelText="انصراف"
+      />
+
+      {selectedProgram && (
+        <ProgramDetailsModal
+          open={!!selectedProgram}
+          program={selectedProgram}
+          onClose={() => setSelectedProgram(null)}
+        />
+      )}
+    </div>
+  );
+}

@@ -127,15 +127,36 @@ export default function ExerciseSelector({
                 isSelected ? "bg-blue-50 border-blue-400" : "bg-gray-50"
               }`}
             >
-              <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 cursor-pointer select-none group" tabIndex={0}>
                 <input
                   type="checkbox"
                   checked={!!isSelected}
                   onChange={() => toggleExercise(ex)}
-                  className="accent-blue-600"
+                  className="hidden peer"
                 />
-                <span className="font-semibold">{ex.name}</span>
-              </div>
+                <span
+                  className="w-5 h-5 flex items-center justify-center rounded border-2 border-blue-400 bg-white transition-all duration-200
+                  peer-checked:bg-blue-600 peer-checked:border-blue-600 relative"
+                >
+                  <svg
+                    className="opacity-0 scale-75 peer-checked:opacity-100 peer-checked:scale-100 transition-all duration-200 text-white"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M4 8.5L7 11.5L12 5.5"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span className="font-semibold group-hover:text-blue-700 transition-colors duration-200">{ex.name}</span>
+              </label>
 
               {isSelected && (
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -150,7 +171,7 @@ export default function ExerciseSelector({
                       onChange={(e) =>
                         handleChange(ex._id, "sets", Number(e.target.value))
                       }
-                      className="border rounded-xl p-2 w-24 text-center"
+                      className="border rounded-xl p-2 w-24 text-center bg-gray-400"
                     />
                   </div>
                   <div className="flex flex-col items-center">
@@ -164,7 +185,7 @@ export default function ExerciseSelector({
                       onChange={(e) =>
                         handleChange(ex._id, "reps", Number(e.target.value))
                       }
-                      className="border rounded-xl p-2 w-24 text-center"
+                      className="border rounded-xl p-2 w-24 text-center bg-gray-400"
                     />
                   </div>
                 </div>

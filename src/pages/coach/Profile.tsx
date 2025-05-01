@@ -4,20 +4,29 @@ import { toast } from "react-toastify";
 
 export default function CoachProfile() {
   const token = localStorage.getItem("token");
-  const [form, setForm] = useState<any>({});
-  const [loading, setLoading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    name: "",
+    bio: "",
+    phone: "",
+  });
   const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
 
   const fetchProfile = async () => {
     try {
       const { data } = await axios.get("http://localhost:3000/users/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setForm(data);
-      if (data.profileImage) setPreview(data.profileImage);
-    } catch {
-      toast.error("❌ خطا در دریافت اطلاعات پروفایل");
+      setForm({
+        name: data.name || "",
+        bio: data.bio || "",
+        phone: data.phone || "",
+      });
+      if (data.profileImage) {
+        setPreview(getImageUrl(data.profileImage));
+      }
+    } catch (err) {
+      console.log("خطا در گرفتن پروفایل");
     }
   };
 
@@ -25,29 +34,22 @@ export default function CoachProfile() {
     fetchProfile();
   }, []);
 
-  const handleChange = (e: any) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
   const handleSubmit = async () => {
-    setLoading(true);
     try {
-      await axios.put("http://localhost:3000/users/me", form, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      toast.success("✅ اطلاعات ذخیره شد");
-      fetchProfile(); // ✅ لود مجدد اطلاعات پس از ذخیره موفق
+      await axios.put(
+        "http://localhost:3000/users/me",
+        {
+          name: form.name,
+          bio: form.bio,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("✅ پروفایل با موفقیت بروزرسانی شد");
     } catch {
-      toast.error("❌ خطا در ذخیره اطلاعات");
+      toast.error("❌ خطا در بروزرسانی پروفایل");
     }
-    setLoading(false);
-  };
-
-  const handleCopy = () => {
-    const link = `${window.location.origin}/public/${form.phone}`;
-    navigator.clipboard.writeText(link);
-    toast.success("✅ لینک صفحه شما کپی شد!");
   };
 
   const handleUpload = async () => {
@@ -69,10 +71,16 @@ export default function CoachProfile() {
       );
       toast.success("✅ عکس با موفقیت آپلود شد");
       await fetchProfile();
-      setPreview(data.profileImage);
+      setPreview(getImageUrl(data.profileImage));
     } catch {
       toast.error("❌ خطا در آپلود عکس");
     }
+  };
+
+  const getImageUrl = (url: string) => {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    return `http://localhost:3000${url}`;
   };
 
   return (
@@ -97,119 +105,86 @@ export default function CoachProfile() {
 
       {/* فرم اطلاعات عمومی */}
       <div className="bg-white p-6 rounded-xl shadow space-y-6">
-        <div className="grid md:grid-cols-2 gap-4">
+        <h3 className="text-xl font-bold text-gray-900">اطلاعات عمومی</h3>
+
+        <div className="space-y-4">
           <div>
             <label className="block text-sm font-bold mb-1 text-black">
-              شماره تلفن
+              نام و نام خانوادگی
             </label>
             <input
-              disabled
-              value={form.phone || ""}
-              className="w-full border p-3 rounded-xl bg-gray-100 text-black"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="w-full p-3 rounded-xl border border-blue-300 text-blue-900 bg-white placeholder-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+              placeholder="مثلاً علی محمدی"
             />
           </div>
 
           <div>
             <label className="block text-sm font-bold mb-1 text-black">
-              رمز عبور
+              شماره موبایل
             </label>
             <input
+              value={form.phone}
               disabled
-              value={"********"}
-              className="w-full border p-3 rounded-xl bg-gray-100 text-black"
+              className="w-full p-3 rounded-xl border border-gray-300 text-gray-500 bg-gray-100"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-1 text-black">
+              درباره من
+            </label>
+            <textarea
+              value={form.bio}
+              onChange={(e) => setForm({ ...form, bio: e.target.value })}
+              className="w-full p-3 rounded-xl border border-blue-300 text-blue-900 bg-white placeholder-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+              placeholder="توضیحات مختصری درباره خودتان..."
+              rows={4}
             />
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-bold mb-1 text-black">
-            نام کامل
-          </label>
-          <input
-            name="name"
-            value={form.name || ""}
-            onChange={handleChange}
-            className="w-full border p-3 rounded-xl bg-gray-100 text-black"
-            placeholder="نام خود را وارد کنید"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-bold mb-1  text-black">
-            بیوگرافی
-          </label>
-          <textarea
-            name="bio"
-            value={form.bio || ""}
-            onChange={handleChange}
-            className="w-full border p-3 rounded-xl bg-gray-100 text-black"
-            rows={4}
-            placeholder="درباره خودت بنویس..."
-          />
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-4">
-          {["instagram", "whatsapp", "youtube", "telegram", "email"].map(
-            (field) => (
-              <div key={field}>
-                <label className="block text-sm font-bold mb-1 text-black">
-                  {field.charAt(0).toUpperCase() + field.slice(1)}
-                </label>
-                <input
-                  name={field}
-                  value={form[field] || ""}
-                  onChange={handleChange}
-                  className="w-full border p-3 bg-gray-100 rounded-xl text-black"
-                  placeholder={`لینک ${field}`}
-                />
-              </div>
-            )
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-bold mb-1 text-black">
-            آپلود تصویر پروفایل
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0] || null;
-              setFile(file);
-              if (file) {
-                const reader = new FileReader();
-                reader.onload = () => setPreview(reader.result as string);
-                reader.readAsDataURL(file);
-              }
-            }}
-            className="w-full border p-2 rounded-xl bg-gray-100 text-black"
-          />
-          <button
-            onClick={handleUpload}
-            className="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 transition"
-          >
-            آپلود تصویر
-          </button>
-        </div>
-
-        <div className="flex flex-wrap justify-between items-center gap-4">
+        <div className="text-right">
           <button
             onClick={handleSubmit}
-            disabled={loading}
-            className="bg-green-600 text-white px-6 py-2 rounded-xl hover:bg-green-700 transition font-bold"
+            className="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 font-bold transition"
           >
-            ذخیره اطلاعات
+            ذخیره تغییرات
           </button>
+        </div>
+      </div>
 
-          {form.isPremium && (
-            <button
-              onClick={handleCopy}
-              className="bg-gray-200 text-blue-700 px-4 py-2 rounded-xl hover:bg-gray-300 transition text-sm"
-            >
-              📋 کپی لینک صفحه عمومی من
-            </button>
-          )}
+      {/* آپلود عکس پروفایل */}
+      <div className="bg-white p-6 rounded-xl shadow space-y-6">
+        <h3 className="text-xl font-bold text-gray-900">عکس پروفایل</h3>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold mb-1 text-black">
+              انتخاب عکس جدید
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              className="w-full border p-2 rounded-xl border-blue-300 text-blue-900"
+            />
+            {file && (
+              <p className="text-sm text-gray-700 mt-1">
+                فایل انتخاب‌شده: {file.name}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="text-right">
+          <button
+            onClick={handleUpload}
+            className="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 font-bold transition"
+          >
+            آپلود عکس
+          </button>
         </div>
       </div>
     </div>

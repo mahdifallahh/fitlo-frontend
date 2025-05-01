@@ -93,6 +93,12 @@ export default function Exercises() {
     }
   };
 
+  const getImageUrl = (url: string) => {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    return `http://localhost:3000${url}`;
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-10 text-black">
       {/* فرم افزودن تمرین */}
@@ -218,7 +224,7 @@ export default function Exercises() {
             render: (item) =>
               item.gifUrl ? (
                 <img
-                  src={item.gifUrl}
+                  src={getImageUrl(item.gifUrl)}
                   alt={item.name}
                   className="w-14 h-14 object-cover rounded"
                 />

@@ -48,27 +48,9 @@ export default function SmartList<T>({
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const limit = 10;
+  const [loading, setLoading] = useState(false);
+  const [coaches, setCoaches] = useState<T[]>([]);
 
-  // const fetchData = async () => {
-  //   try {
-  //     const params: any = {
-  //       search,
-  //       page,
-  //       limit,
-  //       ...filterValues, // فیلترهای انتخاب‌شده را به پارامترهای API ارسال می‌کنیم
-  //     };
-
-  //     const response = await axios.get(url, {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //       params,
-  //     });
-
-  //     setData(response.data.items); // داده‌های فیلتر شده را از پاسخ API دریافت کنید
-  //     setTotal(response.data.total); // تعداد کل داده‌ها را دریافت کنید
-  //   } catch (err: any) {
-  //     toast.error("❌ خطا در بارگذاری داده‌ها");
-  //   }
-  // };
   const fetchData = async () => {
     try {
       const params: any = {
@@ -91,8 +73,22 @@ export default function SmartList<T>({
       toast.error("❌ خطا در بارگذاری داده‌ها");
     }
   };
+
+  const fetchCoaches = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('/api/admin/coaches', { params: filterValues });
+      setCoaches(response.data);
+    } catch (error) {
+      console.error('Error fetching coaches:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchCoaches();
   }, [search, page, filterValues]); // صفحه و فیلترها تغییر کنند، داده‌ها مجدداً بارگذاری شوند
 
   const pageCount = Math.ceil(total / limit);
@@ -123,18 +119,6 @@ export default function SmartList<T>({
         {/* فیلترها */}
         <div className="flex flex-wrap gap-2 md:gap-4 w-full">
           {filters.map((filter) => (
-            // <select
-            //   key={filter.field}
-            //   value={filterValues[filter.field] || ""}
-            //   onChange={(e) => {
-            //     setFilterValues((prev) => ({
-            //       ...prev,
-            //       [filter.field]: e.target.value,
-            //     }));
-            //     setPage(1); // هر بار که فیلتر تغییر می‌کند، صفحه را به اولین صفحه تغییر می‌دهیم
-            //   }}
-            //   className="w-full p-3 bg-white border border-blue-300 rounded-xl text-blue-900 focus:ring-2 focus:ring-blue-500"
-            // >
             <select
               key={filter.field}
               value={filterValues[filter.field] || ""}
@@ -160,17 +144,27 @@ export default function SmartList<T>({
       </div>
 
       {/* جدول */}
-      <div className="overflow-auto rounded-xl border border-gray-200">
-        <table className="w-full min-w-[500px] text-right">
+      <div className="overflow-x-auto border border-gray-200 w-full rounded-lg">
+        <table className="w-full min-w-[600px] text-right">
+          <colgroup>
+            {columns.map((col, idx) => (
+              idx === 0
+                ? <col key={idx} className="w-[80px] md:w-[120px]" />
+                : <col key={idx} />
+            ))}
+            {(onEdit || onDelete) && (
+              <col className="w-[90px] md:w-auto" />
+            )}
+          </colgroup>
           <thead>
-            <tr className="bg-blue-50 text-blue-700 text-sm">
+            <tr className="bg-blue-50 text-blue-700 text-xs md:text-sm w-full">
               {columns.map((col, index) => (
-                <th key={index} className="p-3 whitespace-nowrap font-bold">
+                <th key={index} className="p-2 md:p-3 font-bold w-full truncate  ">
                   {col.label}
                 </th>
               ))}
               {(onEdit || onDelete) && (
-                <th className="p-3 whitespace-nowrap text-center font-bold">
+                <th className="p-2 md:p-3 text-center font-bold w-[90px] md:w-auto truncate">
                   عملیات
                 </th>
               )}
@@ -180,29 +174,31 @@ export default function SmartList<T>({
             {data.map((item: any) => (
               <tr
                 key={item._id}
-                className="border-b hover:bg-gray-50 text-gray-800"
+                className="border-b hover:bg-gray-50 text-gray-800 w-full"
               >
                 {columns.map((col, index) => (
-                  <td key={index} className="p-3 whitespace-nowrap">
+                  <td key={index} className="p-2 md:p-3 w-full truncate max-w-[120px] md:max-w-none">
                     {col.render ? col.render(item) : item[col.dataIndex || ""]}
                   </td>
                 ))}
                 {(onEdit || onDelete) && (
-                  <td className="p-3 whitespace-nowrap text-center space-x-2">
+                  <td className="p-2 md:p-3 text-center space-x-1 md:space-x-2 w-[90px] md:w-auto truncate">
                     {onEdit && (
                       <button
                         onClick={() => onEdit(item)}
-                        className="text-blue-600 hover:text-blue-800 bg-gray-100 font-medium"
+                        className="flex items-center justify-center gap-1 text-blue-600 hover:text-white bg-blue-50 hover:bg-blue-600 active:bg-blue-700 font-medium w-9 h-9 md:w-20 md:h-9 rounded-lg shadow-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        title="ویرایش"
                       >
-                        ✏️ ویرایش
+                        <span className="text-lg">✏️</span>
                       </button>
                     )}
                     {onDelete && (
                       <button
                         onClick={() => onDelete(item._id)}
-                        className="text-red-600 hover:text-red-800 bg-gray-100 font-medium"
+                        className="flex items-center justify-center gap-1 text-red-600 hover:text-white bg-red-50 hover:bg-red-600 active:bg-red-700 font-medium w-9 h-9 md:w-20 md:h-9 rounded-lg shadow-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-red-400"
+                        title="حذف"
                       >
-                        🗑️ حذف
+                        <span className="text-lg">🗑️</span>
                       </button>
                     )}
                   </td>

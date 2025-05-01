@@ -5,19 +5,25 @@ import { User } from '../../types/user';
 const CoachesList: React.FC = () => {
   const [coaches, setCoaches] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const token = localStorage.getItem("token");
+  const fetchCoaches = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/admin/coaches', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      console.log('API Response:', response.data);
+      setCoaches(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error('Error fetching coaches:', error);
+      setCoaches([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchCoaches = async () => {
-      try {
-        const response = await axios.get('/api/admin/coaches');
-        setCoaches(response.data);
-      } catch (error) {
-        console.error('Error fetching coaches:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCoaches();
   }, []);
 

@@ -3,6 +3,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../components/ConfirmModal";
 import SmartList from "../../components/SmartList";
+import { API_ENDPOINTS } from "../../config/api";
 
 interface Category {
   _id: string;
@@ -19,28 +20,32 @@ export default function Categories() {
 
   const handleSubmit = async () => {
     if (!form.name.trim()) {
-      toast.warn("نام دسته‌بندی را وارد کنید");
+      toast.error("⚠️ لطفاً نام دسته‌بندی را وارد کنید");
       return;
     }
 
     try {
       if (editingId) {
-        await axios.put(`http://localhost:3000/categories/${editingId}`, form, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        toast.success("✅ دسته‌بندی بروزرسانی شد");
+        await axios.put(
+          `${API_ENDPOINTS.categories}/${editingId}`,
+          form,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        toast.success("✅ دسته‌بندی با موفقیت ویرایش شد");
       } else {
-        await axios.post("http://localhost:3000/categories", form, {
+        await axios.post(API_ENDPOINTS.categories, form, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        toast.success("✅ دسته‌بندی اضافه شد");
+        toast.success("✅ دسته‌بندی با موفقیت اضافه شد");
       }
 
       setForm({ name: "", type: "exercise" });
       setEditingId(null);
-      setRefreshFlag((prev) => prev + 1);
+      setRefreshFlag((f) => f + 1);
     } catch {
-      toast.error("❌ خطا در ذخیره دسته‌بندی");
+      toast.error("❌ خطا در ثبت دسته‌بندی");
     }
   };
 
@@ -49,13 +54,13 @@ export default function Categories() {
     setEditingId(item._id);
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:3000/categories/${confirmId}`, {
+      await axios.delete(`${API_ENDPOINTS.categories}/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("🗑️ دسته‌بندی حذف شد");
-      setRefreshFlag((prev) => prev + 1);
+      toast.success("✅ دسته‌بندی حذف شد");
+      setRefreshFlag((f) => f + 1);
     } catch {
       toast.error("❌ خطا در حذف دسته‌بندی");
     } finally {
@@ -103,21 +108,16 @@ export default function Categories() {
       </div>
 
       {/* لیست با SmartList */}
-      <SmartList
+      <SmartList<Category>
         key={refreshFlag.toString()}
-        url="http://localhost:3000/categories"
-        title="📂 لیست دسته‌بندی‌ها"
+        url={API_ENDPOINTS.categories}
+        title="📋 لیست دسته‌بندی‌ها"
         token={token || ""}
-        searchPlaceholder="جستجو بر اساس نام..."
+        searchPlaceholder="جستجوی نام دسته‌بندی..."
         columns={[
           {
-            label: "نام دسته",
-            render: (cat: Category) => cat.name,
-          },
-          {
-            label: "نوع",
-            render: (cat: Category) =>
-              cat.type === "exercise" ? "تمرین" : "تغذیه",
+            label: "نام",
+            render: (item) => item.name,
           },
         ]}
         onEdit={handleEdit}
@@ -126,7 +126,7 @@ export default function Categories() {
 
       <ConfirmModal
         open={!!confirmId}
-        onConfirm={handleDelete}
+        onConfirm={() => handleDelete(confirmId || "")}
         onCancel={() => setConfirmId(null)}
         message="آیا از حذف این دسته‌بندی مطمئن هستید؟"
         confirmText="حذف"

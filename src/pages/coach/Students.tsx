@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../components/ConfirmModal";
 import SmartList from "../../components/SmartList";
 import { Eye, EyeOff } from "lucide-react";
+import { API_ENDPOINTS } from "../../config/api";
+import Modal from "../../components/Modal";
+
 interface Student {
   _id: string;
   name: string;
@@ -17,6 +20,9 @@ export default function Students() {
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [refreshFlag, setRefreshFlag] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
+  const [programModalOpen, setProgramModalOpen] = useState(false);
+  const [programData, setProgramData] = useState<any>(null);
+  const [programLoading, setProgramLoading] = useState(false);
 
   const handleSubmit = async () => {
     if (!form.name || !form.phone || (!editingId && !form.password)) {
@@ -25,16 +31,16 @@ export default function Students() {
     try {
       if (editingId) {
         await axios.put(
-          `http://localhost:3000/users/students/${editingId}`,
+          `${API_ENDPOINTS.users.students}/${editingId}`,
           form,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        toast.success("✅ شاگرد با موفقیت ویرایش شد");
+        toast.success("✅ دانش‌آموز با موفقیت ویرایش شد");
       } else {
-        await axios.post("http://localhost:3000/users/students", form, {
+        await axios.post(API_ENDPOINTS.users.students, form, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        toast.success("✅ شاگرد جدید افزوده شد");
+        toast.success("✅ دانش‌آموز با موفقیت اضافه شد");
       }
       setForm({ name: "", phone: "", password: "" });
       setEditingId(null);
@@ -50,17 +56,34 @@ export default function Students() {
     setForm({ name: student.name, phone: student.phone, password: "" });
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:3000/users/students/${confirmId}`, {
+      await axios.delete(`${API_ENDPOINTS.users.students}/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("🗑️ شاگرد حذف شد");
+      toast.success("✅ دانش‌آموز حذف شد");
       setRefreshFlag((f) => f + 1);
     } catch {
-      toast.error("❌ خطا در حذف شاگرد");
+      toast.error("❌ خطا در حذف دانش‌آموز");
     } finally {
       setConfirmId(null);
+    }
+  };
+
+  const handleViewProgram = async (student: Student) => {
+    setProgramLoading(true);
+    setProgramModalOpen(true);
+    try {
+      const { data } = await axios.get(`${API_ENDPOINTS.programs}?studentId=${student._id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // فرض: فقط یک برنامه فعال برای هر شاگرد
+      setProgramData(data.items?.[0] || null);
+    } catch (err) {
+      toast.error("خطا در دریافت برنامه شاگرد");
+      setProgramData(null);
+    } finally {
+      setProgramLoading(false);
     }
   };
 
@@ -118,15 +141,32 @@ export default function Students() {
       </div>
 
       {/* لیست شاگردها */}
-      <SmartList
+      <SmartList<Student>
         key={refreshFlag.toString()}
-        url="http://localhost:3000/users/students"
-        title="📋 لیست شاگردها"
+        url={API_ENDPOINTS.users.students}
+        title="📋 لیست دانش‌آموزان"
         token={token || ""}
-        searchPlaceholder="جستجو بر اساس نام یا شماره..."
+        searchPlaceholder="جستجوی نام یا شماره..."
         columns={[
-          { label: "نام", dataIndex: "name" },
-          { label: "شماره", dataIndex: "phone" },
+          {
+            label: "نام",
+            render: (item) => item.name,
+          },
+          {
+            label: "شماره",
+            render: (item) => item.phone,
+          },
+          {
+            label: "برنامه",
+            render: (item) => (
+              <button
+                className="px-4 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+                onClick={() => handleViewProgram(item)}
+              >
+                مشاهده برنامه
+              </button>
+            ),
+          },
         ]}
         onEdit={handleEdit}
         onDelete={(id) => setConfirmId(id)}
@@ -135,11 +175,48 @@ export default function Students() {
       <ConfirmModal
         open={!!confirmId}
         message="آیا از حذف این شاگرد مطمئن هستید؟"
-        onConfirm={handleDelete}
+        onConfirm={() => handleDelete(confirmId || "")}
         onCancel={() => setConfirmId(null)}
         confirmText="حذف"
         cancelText="انصراف"
       />
+
+      <Modal open={programModalOpen} onClose={() => setProgramModalOpen(false)}>
+        {programLoading ? (
+          <div className="p-8 text-center">در حال دریافت برنامه...</div>
+        ) : programData ? (
+          <div className="space-y-6 max-h-[70vh] overflow-y-auto text-black">
+            <h2 className="text-xl font-bold text-blue-700 text-center mb-4">
+              برنامه شاگرد: {programData.studentId?.name}
+            </h2>
+            {programData.days?.map((d: any, idx: number) => (
+              <div key={d.day || idx} className="border border-gray-300 rounded-xl p-4 space-y-3 bg-gray-50">
+                <h3 className="font-bold text-blue-600 text-right">{d.day}</h3>
+                {d.exercises.length === 0 && (
+                  <p className="text-sm text-gray-500">تمرینی برای این روز ثبت نشده</p>
+                )}
+                {d.exercises.map((ex: any, i: number) => (
+                  <div key={i} className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-3">
+                    <div className="flex-1">
+                      <p className="font-semibold">{ex.name}</p>
+                      <div className="flex items-center gap-4 mt-2 text-sm">
+                        <span>ست: {ex.sets || 0}</span>
+                        <span>تکرار: {ex.reps || 0}</span>
+                        {ex.categoryName && <span>دسته‌بندی: {ex.categoryName}</span>}
+                      </div>
+                    </div>
+                    {ex.gifUrl && (
+                      <img src={ex.gifUrl} alt={ex.name} className="w-20 h-20 object-cover rounded" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-8 text-center text-gray-500">برنامه‌ای برای این شاگرد ثبت نشده است.</div>
+        )}
+      </Modal>
     </div>
   );
 }

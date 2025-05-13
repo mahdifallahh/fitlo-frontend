@@ -1,24 +1,32 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
+import { API_ENDPOINTS } from "../../config/api";
 
 export default function PublicTrainer() {
   const { phone } = useParams();
   const [profile, setProfile] = useState<any>(null);
+  const [token, setToken] = useState<string>("");
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchTrainer = async () => {
       try {
         const { data } = await axios.get(
-          `http://localhost:3000/users/public/${phone}`
+          API_ENDPOINTS.users.public(phone || ''),
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
         setProfile(data);
       } catch {
-        setProfile(null);
+        toast.error("❌ خطا در دریافت اطلاعات مربی");
       }
     };
 
-    fetch();
+    if (phone) {
+      fetchTrainer();
+    }
   }, [phone]);
 
   if (!profile) {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { API_ENDPOINTS, getUploadUrl } from "../../config/api";
 
 export default function CoachProfile() {
   const token = localStorage.getItem("token");
@@ -14,7 +15,7 @@ export default function CoachProfile() {
 
   const fetchProfile = async () => {
     try {
-      const { data } = await axios.get("http://localhost:3000/users/me", {
+      const { data } = await axios.get(API_ENDPOINTS.users.me, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setForm({
@@ -25,8 +26,8 @@ export default function CoachProfile() {
       if (data.profileImage) {
         setPreview(getImageUrl(data.profileImage));
       }
-    } catch (err) {
-      console.log("خطا در گرفتن پروفایل");
+    } catch {
+      toast.error("❌ خطا در دریافت اطلاعات پروفایل");
     }
   };
 
@@ -35,52 +36,44 @@ export default function CoachProfile() {
   }, []);
 
   const handleSubmit = async () => {
+    if (!form.name.trim()) {
+      toast.error("⚠️ لطفاً نام را وارد کنید");
+      return;
+    }
+
     try {
-      await axios.put(
-        "http://localhost:3000/users/me",
-        {
-          name: form.name,
-          bio: form.bio,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.put(API_ENDPOINTS.users.me, form, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       toast.success("✅ پروفایل با موفقیت بروزرسانی شد");
     } catch {
       toast.error("❌ خطا در بروزرسانی پروفایل");
     }
   };
 
-  const handleUpload = async () => {
-    if (!file) return toast.warning("⚠️ لطفاً یک عکس انتخاب کن");
+  const handleUploadProfile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("profile", file);
 
     try {
-      const { data } = await axios.put(
-        "http://localhost:3000/users/upload-profile",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      toast.success("✅ عکس با موفقیت آپلود شد");
-      await fetchProfile();
-      setPreview(getImageUrl(data.profileImage));
+      const { data } = await axios.post(API_ENDPOINTS.users.uploadProfile, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      setForm((prev) => ({ ...prev, profileUrl: data.url }));
+      toast.success("✅ عکس پروفایل با موفقیت آپلود شد");
     } catch {
-      toast.error("❌ خطا در آپلود عکس");
+      toast.error("❌ خطا در آپلود عکس پروفایل");
     }
   };
 
   const getImageUrl = (url: string) => {
-    if (!url) return "";
-    if (url.startsWith("http")) return url;
-    return `http://localhost:3000${url}`;
+    return getUploadUrl(url);
   };
 
   return (
@@ -167,7 +160,7 @@ export default function CoachProfile() {
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              onChange={handleUploadProfile}
               className="w-full border p-2 rounded-xl border-blue-300 text-blue-900"
             />
             {file && (
@@ -180,7 +173,7 @@ export default function CoachProfile() {
 
         <div className="text-right">
           <button
-            onClick={handleUpload}
+            onClick={handleSubmit}
             className="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 font-bold transition"
           >
             آپلود عکس

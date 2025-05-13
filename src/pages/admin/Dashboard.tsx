@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
+import { API_ENDPOINTS } from "../../config/api";
 import CoachesList from "./CoachesList";
 import PremiumRequests from "./PremiumRequests";
 
@@ -9,6 +11,7 @@ export default function AdminDashboard() {
   const [active, setActive] = useState("coaches");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>({});
+  const [profile, setProfile] = useState<any>({});
   const navigate = useNavigate();
 
   const menu = [
@@ -23,18 +26,33 @@ export default function AdminDashboard() {
 
   const fetchUser = async () => {
     try {
-      const { data } = await axios.get("http://localhost:3000/users/me", {
+      const { data } = await axios.get(API_ENDPOINTS.users.me, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUser(data);
-    } catch (err) {
-      console.log("خطا در گرفتن پروفایل");
+    } catch {
+      toast.error("❌ خطا در دریافت اطلاعات پروفایل");
     }
   };
 
   useEffect(() => {
     fetchUser();
   }, [active]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const { data } = await axios.get(API_ENDPOINTS.users.me, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setProfile(data);
+      } catch {
+        toast.error("❌ خطا در دریافت اطلاعات پروفایل");
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">

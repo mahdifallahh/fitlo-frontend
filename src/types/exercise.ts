@@ -9,11 +9,11 @@ export interface Exercise {
   };
 }
 export interface SelectedExercise extends Exercise {
-    sets: number;
-    reps: number;
-  }
-  interface Props {
-    allExercises: Exercise[]; // 👈 این مهمه
-    defaultSelected: SelectedExercise[];
-    onSave: (selected: SelectedExercise[]) => void;
-  }
+  sets: string;
+  reps: string;
+}
+interface Props {
+  allExercises: Exercise[]; // 👈 این مهمه
+  defaultSelected: SelectedExercise[];
+  onSave: (selected: SelectedExercise[]) => void;
+}

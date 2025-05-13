@@ -1,13 +1,13 @@
 export enum UserRole {
-  STUDENT = 'student',
-  COACH = 'coach',
   ADMIN = 'admin',
+  COACH = 'coach',
+  STUDENT = 'student',
 }
 
 export enum PremiumStatusEnum {
+  PENDING = 'pending',
   ACCEPTED = 'accepted',
   REJECTED = 'rejected',
-  PENDING = 'pending',
 }
 
 export interface User {
@@ -18,6 +18,15 @@ export interface User {
   isPremium: boolean;
   premiumStatus?: PremiumStatusEnum;
   receiptUrl?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
+  coachId?: string;
+  coach?: {
+    _id: string;
+    name: string;
+    phone: string;
+  };
+  premiumAt?: Date;
+  premiumExpiresAt?: Date;
+  studentCount?: number;
 } 

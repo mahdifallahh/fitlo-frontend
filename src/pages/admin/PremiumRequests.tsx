@@ -2,15 +2,19 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { User } from '../../types/user';
 import { PremiumStatusEnum } from '../../types/user';
+import { API_ENDPOINTS } from '../../config/api';
 
 const PremiumRequests: React.FC = () => {
   const [requests, setRequests] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const response = await axios.get('/api/admin/premium-requests');
+        const response = await axios.get(API_ENDPOINTS.admin.premiumRequests, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setRequests(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error('Error fetching premium requests:', error);
@@ -25,7 +29,10 @@ const PremiumRequests: React.FC = () => {
 
   const handleRequest = async (coachId: string, status: PremiumStatusEnum) => {
     try {
-      await axios.post(`/api/admin/premium-requests/${coachId}`, { status });
+      await axios.post(`${API_ENDPOINTS.admin.premiumRequests}/${coachId}`, 
+        { status },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setRequests(requests.filter(request => request._id !== coachId));
     } catch (error) {
       console.error('Error handling premium request:', error);

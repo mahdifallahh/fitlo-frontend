@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 import ExerciseSelector from "../../components/ExerciseSelector";
 import { Exercise, SelectedExercise } from "../../types/exercise";
 import SmartList from "../../components/SmartList";
 import ConfirmModal from "../../components/ConfirmModal";
 import ProgramDetailsModal from "../../components/ProgramDetailsModal";
+import { API_ENDPOINTS } from "../../config/api";
 
 const daysOfWeek = [
   "روز اول",
@@ -18,10 +20,12 @@ const daysOfWeek = [
 
 interface Program {
   _id: string;
+  name: string;
   studentId: {
     name: string;
     phone: string;
   };
+  exercises: any[];
   days: {
     day: string;
     exercises: {
@@ -47,16 +51,22 @@ export default function Programs() {
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [refreshFlag, setRefreshFlag] = useState(Date.now());
+  const [name, setName] = useState("");
+  const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      const headers = { Authorization: `Bearer ${token}` };
-      const [usersRes, exsRes] = await Promise.all([
-        axios.get("http://localhost:3000/users/students", { headers }),
-        axios.get("http://localhost:3000/exercises", { headers }),
-      ]);
-      setStudents(usersRes.data?.items || []);
-      setExercises(exsRes.data?.items || []);
+      try {
+        const [studentsRes, exercisesRes] = await Promise.all([
+          axios.get(API_ENDPOINTS.users.students, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(API_ENDPOINTS.exercises, { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        setStudents(studentsRes.data.items || []);
+        setExercises(exercisesRes.data.items || []);
+      } catch {
+        toast.error("❌ خطا در دریافت اطلاعات");
+      }
     };
 
     fetchData();
@@ -79,46 +89,91 @@ export default function Programs() {
 
     try {
       await axios.post(
-        "http://localhost:3000/programs",
+        API_ENDPOINTS.programs,
         {
           studentId: selectedStudent,
           days: programDays,
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("برنامه ذخیره شد ✅");
+      toast.success("✅ برنامه ذخیره شد");
       setProgramDays([]);
       setSelectedDay("روز اول");
-      setRefreshFlag(Date.now());
-    } catch (err) {
-      alert("خطا در ذخیره برنامه ❌");
+      setRefreshFlag((f) => f + 1);
+    } catch {
+      toast.error("❌ خطا در ذخیره برنامه");
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirmId) return;
+  const handleSubmit = async () => {
+    if (!name.trim()) {
+      toast.error("⚠️ لطفاً نام برنامه را وارد کنید");
+      return;
+    }
+
+    if (!selectedStudent) {
+      toast.error("⚠️ لطفاً دانش‌آموز را انتخاب کنید");
+      return;
+    }
+
+    if (selectedExercises.length === 0) {
+      toast.error("⚠️ لطفاً حداقل یک تمرین انتخاب کنید");
+      return;
+    }
+
     try {
-      await axios.delete(`http://localhost:3000/programs/${confirmId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setRefreshFlag(Date.now());
+      await axios.post(
+        API_ENDPOINTS.programs,
+        {
+          name,
+          studentId: selectedStudent,
+          exerciseIds: selectedExercises,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success("✅ برنامه با موفقیت ثبت شد");
+      setName("");
+      setSelectedStudent("");
+      setSelectedExercises([]);
+      setRefreshFlag((f) => f + 1);
     } catch {
-      alert("❌ خطا در حذف برنامه");
+      toast.error("❌ خطا در ثبت برنامه");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await axios.delete(`${API_ENDPOINTS.programs}/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success("✅ برنامه حذف شد");
+      setRefreshFlag((f) => f + 1);
+    } catch {
+      toast.error("❌ خطا در حذف برنامه");
     } finally {
       setConfirmId(null);
     }
   };
 
-  const handleView = async (id: string) => {
+  const handleEdit = async (program: Program) => {
     try {
-      const { data } = await axios.get(`http://localhost:3000/programs/${id}`, {
+      const { data } = await axios.get(`${API_ENDPOINTS.programs}/${program._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      setName(data.name);
+      setSelectedStudent(data.studentId);
+      setSelectedExercises(data.exerciseIds);
+      setEditingId(program._id);
+    } catch {
+      toast.error("❌ خطا در دریافت اطلاعات برنامه");
+    }
+  };
+
+  const handleView = async (id: string) => {
+    try {
+      const { data } = await axios.get(`${API_ENDPOINTS.programs}/${id}`, { headers: { Authorization: `Bearer ${token}` } });
       setSelectedProgram(data);
     } catch {
-      alert("❌ خطا در دریافت اطلاعات برنامه");
+      toast.error("❌ خطا در دریافت اطلاعات برنامه");
     }
   };
 
@@ -198,32 +253,32 @@ export default function Programs() {
       {/* لیست برنامه‌های ذخیره شده */}
       <SmartList<Program>
         key={refreshFlag.toString()}
-        url="http://localhost:3000/programs"
-        title="📋 لیست برنامه‌های من"
+        url={API_ENDPOINTS.programs}
+        title="📋 لیست برنامه‌ها"
         token={token || ""}
-        searchPlaceholder="جستجو بر اساس نام یا شماره شاگرد..."
+        searchPlaceholder="جستجوی نام برنامه..."
         columns={[
           {
-            label: "👤 نام شاگرد",
-            render: (item) => item.studentId?.name || "---",
+            label: "نام",
+            render: (item) => item.name,
           },
           {
-            label: "📞 شماره",
-            render: (item) => item.studentId?.phone || "---",
+            label: "دانش‌آموز",
+            render: (item) => item.studentId?.name || "--",
           },
           {
-            label: "✅ تعداد روزها",
-            render: (item) => `${item.days.length} روز`,
+            label: "تعداد تمرین",
+            render: (item) => item.exercises?.length || 0,
           },
         ]}
+        onEdit={handleEdit}
         onDelete={(id) => setConfirmId(id)}
-        onEdit={(item) => handleView(item._id)}
       />
 
       <ConfirmModal
         open={!!confirmId}
         message="آیا از حذف این برنامه مطمئن هستید؟"
-        onConfirm={handleDelete}
+        onConfirm={() => handleDelete(confirmId || "")}
         onCancel={() => setConfirmId(null)}
         confirmText="حذف"
         cancelText="انصراف"

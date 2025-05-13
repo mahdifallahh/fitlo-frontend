@@ -1,8 +1,10 @@
-import {  useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "./Modal";
 import { Program } from "../types/program";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { API_ENDPOINTS } from "../config/api";
+
 
 interface Props {
   open: boolean;
@@ -10,11 +12,10 @@ interface Props {
   onClose: () => void;
 }
 
-
-
 export default function ProgramDetailsModal({ open, program, onClose }: Props) {
   const [dayState, setDayState] = useState([...program.days]);
   const token = localStorage.getItem("token");
+  const [programDetails, setProgramDetails] = useState(program);
 
   const handleChangeSetRep = (
     day: string,
@@ -52,7 +53,7 @@ export default function ProgramDetailsModal({ open, program, onClose }: Props) {
   const handleSubmit = async () => {
     try {
       await axios.put(
-        `http://localhost:3000/programs/${program._id}`,
+        `${API_ENDPOINTS.programs}/${programDetails._id}`,
         { days: dayState },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -65,11 +66,31 @@ export default function ProgramDetailsModal({ open, program, onClose }: Props) {
     }
   };
 
+  useEffect(() => {
+    const fetchProgram = async () => {
+      try {
+        const { data } = await axios.get(
+          `${API_ENDPOINTS.programs}/${program._id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setProgramDetails(data);
+      } catch {
+        toast.error("❌ خطا در دریافت اطلاعات برنامه");
+      }
+    };
+
+    if (program) {
+      fetchProgram();
+    }
+  }, [program]);
+
   return (
     <Modal open={open} onClose={onClose}>
       <div className="space-y-6 max-h-[85vh] overflow-y-auto text-black">
         <h2 className="text-xl font-bold text-blue-700 text-center">
-          ✏️ ویرایش برنامه شاگرد: {program.studentId?.name}
+          ✏️ ویرایش برنامه شاگرد: {programDetails.studentId?.name}
         </h2>
 
         {dayState.map((d) => (

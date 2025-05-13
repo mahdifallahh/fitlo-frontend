@@ -1,5 +1,3 @@
-import React from "react";
-
 interface ConfirmModalProps {
   open: boolean;
   title?: string;
@@ -12,11 +10,11 @@ interface ConfirmModalProps {
 
 export default function ConfirmModal({
   open,
-  title = "تأیید عملیات",
+  title = "تایید",
   message,
   onConfirm,
   onCancel,
-  confirmText = "تأیید",
+  confirmText = "تایید",
   cancelText = "انصراف",
 }: ConfirmModalProps) {
   if (!open) return null;

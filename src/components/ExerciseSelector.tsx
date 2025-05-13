@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
+import { API_ENDPOINTS } from "../config/api";
 import { Exercise, SelectedExercise } from "../types/exercise";
 
 interface Props {
@@ -20,6 +22,24 @@ export default function ExerciseSelector({
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selected, setSelected] = useState<SelectedExercise[]>([]);
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data } = await axios.get(
+          `${API_ENDPOINTS.categories}?type=exercise`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setCategories(data.items || []);
+      } catch {
+        toast.error("❌ خطا در دریافت دسته‌بندی‌ها");
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,14 +77,14 @@ export default function ExerciseSelector({
         ...prev,
         {
           ...exercise,
-          sets: 3,
-          reps: 10,
+          sets: "",
+          reps: "",
         },
       ]);
     }
   };
 
-  const handleChange = (id: string, field: "sets" | "reps", value: number) => {
+  const handleChange = (id: string, field: "sets" | "reps", value: string) => {
     setSelected((prev) =>
       prev.map((ex) => (ex._id === id ? { ...ex, [field]: value } : ex))
     );
@@ -165,11 +185,10 @@ export default function ExerciseSelector({
                       تعداد ست
                     </label>
                     <input
-                      type="number"
-                      min={1}
+                      type="text"
                       value={isSelected.sets}
                       onChange={(e) =>
-                        handleChange(ex._id, "sets", Number(e.target.value))
+                        handleChange(ex._id, "sets", e.target.value)
                       }
                       className="border rounded-xl p-2 w-24 text-center bg-gray-400"
                     />
@@ -179,11 +198,10 @@ export default function ExerciseSelector({
                       تعداد تکرار
                     </label>
                     <input
-                      type="number"
-                      min={1}
+                      type="text"
                       value={isSelected.reps}
                       onChange={(e) =>
-                        handleChange(ex._id, "reps", Number(e.target.value))
+                        handleChange(ex._id, "reps", e.target.value)
                       }
                       className="border rounded-xl p-2 w-24 text-center bg-gray-400"
                     />

@@ -8,6 +8,8 @@ import PublicPage from "./PublicPage";
 import axios from "axios";
 import Programs from "./Programs";
 import { FaUser, FaUsers, FaClipboardList, FaListAlt, FaTags, FaGlobe, FaStar } from "react-icons/fa";
+import { toast } from "react-toastify";
+import { API_ENDPOINTS } from "../../config/api";
 
 export default function CoachDashboard() {
   const token = localStorage.getItem("token");
@@ -32,12 +34,12 @@ export default function CoachDashboard() {
 
   const fetchUser = async () => {
     try {
-      const { data } = await axios.get("http://localhost:3000/users/me", {
+      const { data } = await axios.get(API_ENDPOINTS.users.me, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUser(data);
-    } catch (err) {
-      console.log("خطا در گرفتن پروفایل");
+    } catch {
+      toast.error("❌ خطا در دریافت اطلاعات پروفایل");
     }
   };
 

@@ -1,11 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import CoachDashboard from "./pages/coach/Dashboard";
-import StudentDashboard from "./pages/student/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicTrainer from "./pages/public/PublicTrainer";
 import { ToastContainer } from "react-toastify";
+import StudentDashboard from "./pages/student/StudentDashboard";
 
 function App() {
   return (

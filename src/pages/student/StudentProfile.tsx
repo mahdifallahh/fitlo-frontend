@@ -79,7 +79,7 @@ export default function StudentProfile() {
       if (imageFile) {
         const formData = new FormData();
         formData.append('file', imageFile);
-        const uploadRes = await axios.put('http://localhost:3000/users/upload-profile', formData, {
+        const uploadRes = await axios.post('http://localhost:3000/users/upload-profile', formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
         profileImageUrl = uploadRes.data.profileImage;

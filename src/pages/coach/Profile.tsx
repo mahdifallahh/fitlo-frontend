@@ -56,7 +56,7 @@ export default function CoachProfile() {
     if (!file) return;
 
     const formData = new FormData();
-    formData.append("profile", file);
+    formData.append("file", file);
 
     try {
       const { data } = await axios.post(API_ENDPOINTS.users.uploadProfile, formData, {

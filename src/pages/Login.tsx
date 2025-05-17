@@ -6,7 +6,9 @@ import { toast } from "react-toastify";
 import { API_ENDPOINTS } from "../config/api";
 
 export default function Login() {
-  const [step, setStep] = useState<"phone" | "login" | "reset" | "register">("phone");
+  const [step, setStep] = useState<"phone" | "login" | "reset" | "register">(
+    "phone"
+  );
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +26,9 @@ export default function Login() {
     setMessage("");
 
     try {
-      const { data } = await axios.post(API_ENDPOINTS.auth.checkPhone, { phone });
+      const { data } = await axios.post(API_ENDPOINTS.auth.checkPhone, {
+        phone,
+      });
 
       if (!data.exists) {
         setStep("register");
@@ -77,12 +81,13 @@ export default function Login() {
   const handleSendOtp = async () => {
     if (!phone.trim()) {
       toast.error("⚠️ لطفاً شماره موبایل را وارد کنید");
+
       return;
     }
 
     try {
       await axios.post(API_ENDPOINTS.auth.sendOtp, { phone });
-      setStep("reset");
+
       toast.success("✅ کد تایید ارسال شد");
       startOtpCooldown();
     } catch (err) {
@@ -110,7 +115,12 @@ export default function Login() {
       toast.error(err.response?.data?.message || "❌ خطا در تغییر رمز عبور");
     }
   };
-
+  const handleForgotPassword = async () => {
+    setLoading(true);
+    setStep("reset");
+    handleSendOtp();
+    setLoading(false);
+  };
   const handleRegister = async () => {
     if (!otp || !password) {
       toast.error("⚠️ لطفاً کد تایید و رمز عبور را وارد کنید");
@@ -165,10 +175,13 @@ export default function Login() {
           ورود به <span className="text-blue-600">Fitlo</span>
         </h2>
 
-        {step === "phone" && (
+        {step == "phone" && (
           <>
             <div className="space-y-2">
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 text-right">
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700 text-right"
+              >
                 شماره تلفن
               </label>
               <input
@@ -190,10 +203,13 @@ export default function Login() {
           </>
         )}
 
-        {step === "login" && (
+        {step == "login" && (
           <>
             <div className="space-y-2">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 text-right">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 text-right"
+              >
                 رمز عبور
               </label>
               <input
@@ -214,17 +230,20 @@ export default function Login() {
             </button>
             <p
               className="text-sm text-blue-500 text-center mt-2 cursor-pointer hover:underline"
-              onClick={handleSendOtp}
+              onClick={handleForgotPassword}
             >
               فراموشی رمز عبور
             </p>
           </>
         )}
 
-        {step === "reset" && (
+        {step == "reset" && (
           <>
             <div className="space-y-2">
-              <label htmlFor="otp" className="block text-sm font-medium text-gray-700 text-right">
+              <label
+                htmlFor="otp"
+                className="block text-sm font-medium text-gray-700 text-right"
+              >
                 کد تایید
               </label>
               <input
@@ -237,7 +256,10 @@ export default function Login() {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 text-right">
+              <label
+                htmlFor="newPassword"
+                className="block text-sm font-medium text-gray-700 text-right"
+              >
                 رمز عبور جدید
               </label>
               <input
@@ -270,10 +292,13 @@ export default function Login() {
           </>
         )}
 
-        {step === "register" && (
+        {step == "register" && (
           <>
             <div className="space-y-2">
-              <label htmlFor="otp" className="block text-sm font-medium text-gray-700 text-right">
+              <label
+                htmlFor="otp"
+                className="block text-sm font-medium text-gray-700 text-right"
+              >
                 کد تایید
               </label>
               <input
@@ -286,7 +311,10 @@ export default function Login() {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 text-right">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 text-right"
+              >
                 رمز عبور جدید
               </label>
               <input
@@ -308,9 +336,13 @@ export default function Login() {
             <button
               onClick={handleSendOtp}
               disabled={resendDisabled}
-              className={`w-full ${resendDisabled ? "bg-gray-300" : "bg-blue-600 hover:bg-blue-700"} text-white py-2 rounded-xl font-semibold transition`}
+              className={`w-full ${
+                resendDisabled ? "bg-gray-300" : "bg-blue-600 hover:bg-blue-700"
+              } text-white py-2 rounded-xl font-semibold transition`}
             >
-              {resendDisabled ? `ارسال مجدد تا ${cooldown} ثانیه` : "ارسال مجدد کد"}
+              {resendDisabled
+                ? `ارسال مجدد تا ${cooldown} ثانیه`
+                : "ارسال مجدد کد"}
             </button>
           </>
         )}

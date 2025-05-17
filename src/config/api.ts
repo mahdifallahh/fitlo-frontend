@@ -1,8 +1,7 @@
- export const API_BASE_URL = 'http://localhost:3000';
+export const API_BASE_URL = "http://localhost:3000";
 // export const API_BASE_URL = 'http://services.im12.chabokan.net';
 
 export const API_ENDPOINTS = {
-
   auth: {
     checkPhone: `${API_BASE_URL}/auth/check-phone`,
     login: `${API_BASE_URL}/auth/login`,
@@ -10,7 +9,6 @@ export const API_ENDPOINTS = {
     sendOtp: `${API_BASE_URL}/auth/send-otp`,
     resetPassword: `${API_BASE_URL}/auth/reset-password`,
   },
-
 
   users: {
     me: `${API_BASE_URL}/users/me`,
@@ -20,14 +18,11 @@ export const API_ENDPOINTS = {
     public: (phone: string) => `${API_BASE_URL}/users/public/${phone}`,
   },
 
- 
   categories: `${API_BASE_URL}/categories`,
 
   exercises: `${API_BASE_URL}/exercises`,
 
-
   programs: `${API_BASE_URL}/programs`,
-
 
   admin: {
     coaches: `${API_BASE_URL}/admin/coaches`,
@@ -41,7 +36,7 @@ export const API_ENDPOINTS = {
   },
 } as const;
 export const getUploadUrl = (path: string) => {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
+  if (!path) return "";
+  if (path.startsWith("http")) return path;
   return `${API_BASE_URL}${path}`;
-}; 
+};

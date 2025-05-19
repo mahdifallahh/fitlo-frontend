@@ -1,5 +1,5 @@
 // export const API_BASE_URL = "http://localhost:3000";
-export const API_BASE_URL = 'http://services.im12.chabokan.net';
+export const API_BASE_URL = 'https://nest-ttxkob.chbk.app/';
 
 export const API_ENDPOINTS = {
   auth: {

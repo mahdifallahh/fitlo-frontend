@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { User } from '../../types/user';
 import Dashboard from '../../components/Dashboard';
 import { toast } from 'react-toastify';
+import { API_BASE_URL } from '../../config/api';
 
 export default function StudentProfile() {
   const [user, setUser] = useState<User | null>(null);
@@ -25,7 +26,7 @@ export default function StudentProfile() {
       return;
     }
     axios
-      .get('http://localhost:3000/users/me', {
+      .get(`${API_BASE_URL}/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -58,7 +59,7 @@ export default function StudentProfile() {
       if (user?.coachId) {
         try {
           const token = localStorage.getItem('token');
-          const response = await axios.get(`http://localhost:3000/users/coach/${user.coachId}`, {
+          const response = await axios.get(`${API_BASE_URL}/users/coach/${user.coachId}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setCoach(response.data);
@@ -79,13 +80,13 @@ export default function StudentProfile() {
       if (imageFile) {
         const formData = new FormData();
         formData.append('file', imageFile);
-        const uploadRes = await axios.post('http://localhost:3000/users/upload-profile', formData, {
+        const uploadRes = await axios.post(`${API_BASE_URL}/users/upload-profile`, formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
         profileImageUrl = uploadRes.data.profileImage;
       }
       await axios.put(
-        'http://localhost:3000/users/me',
+        `${API_BASE_URL}/users/me`,
         {
           name: form.name,
           family: form.family,

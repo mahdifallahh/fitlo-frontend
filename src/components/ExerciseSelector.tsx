@@ -46,7 +46,7 @@ export default function ExerciseSelector({
       const headers = { Authorization: `Bearer ${token}` };
       try {
         const { data } = await axios.get(
-          "http://localhost:3000/categories?type=exercise",
+          `${API_ENDPOINTS.categories}?type=exercise`,
           { headers }
         );
 

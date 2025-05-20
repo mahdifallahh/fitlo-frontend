@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import Select from 'react-select';
 import ConfirmModal from "../../components/ConfirmModal";
 import SmartList from "../../components/SmartList";
-import { API_ENDPOINTS } from "../../config/api";
+import { API_BASE_URL, API_ENDPOINTS } from "../../config/api";
 
 // Add custom styles for select dropdown
 const selectStyles = `
@@ -143,7 +143,7 @@ export default function Exercises() {
   const getImageUrl = (url: string) => {
     if (!url) return "";
     if (url.startsWith("http")) return url;
-    return `http://localhost:3000${url}`;
+    return `${API_BASE_URL}${url}`;
   };
 
   return (

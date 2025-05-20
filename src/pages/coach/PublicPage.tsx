@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { API_BASE_URL } from "../../config/api";
 
 export default function PublicPage() {
   const token = localStorage.getItem("token");
@@ -9,7 +10,7 @@ export default function PublicPage() {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const { data } = await axios.get("http://localhost:3000/users/me", {
+        const { data } = await axios.get(`${API_BASE_URL}/users/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
     

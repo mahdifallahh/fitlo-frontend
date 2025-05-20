@@ -6,12 +6,14 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import PublicTrainer from "./pages/public/PublicTrainer";
 import { ToastContainer } from "react-toastify";
 import StudentDashboard from "./pages/student/StudentDashboard";
+import Landing from './pages/Landing';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
         <Route
           path="/coach/dashboard"
           element={

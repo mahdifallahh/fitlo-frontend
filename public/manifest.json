@@ -2,7 +2,7 @@
   "name": "Fitlo",
   "short_name": "Fitlo",
   "description": "مدیریت هوشمند تمرینات و ارتباط با مربی",
-  "start_url": "/",
+  "start_url": "/login",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#3b82f6",

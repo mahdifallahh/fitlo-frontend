@@ -18,6 +18,7 @@ export interface User {
   isPremium: boolean;
   premiumStatus?: PremiumStatusEnum;
   receiptUrl?: string;
+  profileImage?: string;
   createdAt: Date;
   updatedAt: Date;
   coachId?: string;

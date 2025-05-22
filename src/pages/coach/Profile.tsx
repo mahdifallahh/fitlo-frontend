@@ -9,6 +9,7 @@ export default function CoachProfile() {
     name: "",
     bio: "",
     phone: "",
+    signedProfilePictureUrl: "",
   });
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -22,6 +23,7 @@ export default function CoachProfile() {
         name: data.name || "",
         bio: data.bio || "",
         phone: data.phone || "",
+        signedProfilePictureUrl: data.signedProfilePictureUrl || "",   
       });
       if (data.profileImage) {
         setPreview(getImageUrl(data.profileImage));
@@ -88,7 +90,11 @@ export default function CoachProfile() {
           />
         ) : (
           <div className="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center text-xl">
-            👤
+          <img
+            src={form.signedProfilePictureUrl}
+            alt="profile"
+            className="w-20 h-20 rounded-full object-cover border-2 border-blue-500"
+          />
           </div>
         )}
         <h2 className="text-2xl font-bold text-gray-800">

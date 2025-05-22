@@ -7,6 +7,21 @@ import { API_ENDPOINTS } from "../config/api";
 import { motion, AnimatePresence } from "framer-motion";
 import Logo from "../components/Logo";
 
+// Utility function to convert Persian/Arabic numbers to English
+const convertToEnglishNumbers = (str: string): string => {
+  const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+  const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  
+  return str.split('').map(char => {
+    const persianIndex = persianNumbers.indexOf(char);
+    const arabicIndex = arabicNumbers.indexOf(char);
+    
+    if (persianIndex !== -1) return persianIndex.toString();
+    if (arabicIndex !== -1) return arabicIndex.toString();
+    return char;
+  }).join('');
+};
+
 export default function Login() {
   const [step, setStep] = useState<"phone" | "login" | "reset" | "register">(
     "phone"
@@ -28,8 +43,9 @@ export default function Login() {
     setMessage("");
 
     try {
+      const englishPhone = convertToEnglishNumbers(phone);
       const { data } = await axios.post(API_ENDPOINTS.auth.checkPhone, {
-        phone,
+        phone: englishPhone,
       });
 
       if (!data.exists) {
@@ -54,8 +70,9 @@ export default function Login() {
     setMessage("");
 
     try {
+      const englishPhone = convertToEnglishNumbers(phone);
       const { data } = await axios.post(API_ENDPOINTS.auth.login, {
-        phone,
+        phone: englishPhone,
         password,
       });
 
@@ -88,7 +105,8 @@ export default function Login() {
     }
 
     try {
-      await axios.post(API_ENDPOINTS.auth.sendOtp, { phone });
+      const englishPhone = convertToEnglishNumbers(phone);
+      await axios.post(API_ENDPOINTS.auth.sendOtp, { phone: englishPhone });
 
       toast.success("✅ کد تایید ارسال شد");
       startOtpCooldown();
@@ -104,8 +122,9 @@ export default function Login() {
     }
 
     try {
+      const englishPhone = convertToEnglishNumbers(phone);
       await axios.post(API_ENDPOINTS.auth.resetPassword, {
-        phone,
+        phone: englishPhone,
         code: otp,
         newPassword,
       });
@@ -131,8 +150,9 @@ export default function Login() {
     setLoading(true);
     setMessage("");
     try {
+      const englishPhone = convertToEnglishNumbers(phone);
       const { data } = await axios.post(API_ENDPOINTS.auth.verifyOtp, {
-        phone,
+        phone: englishPhone,
         code: otp,
         password,
       });

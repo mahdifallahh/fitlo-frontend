@@ -5,6 +5,10 @@ import { User } from '../../types/user';
 import Dashboard from '../../components/Dashboard';
 import { toast } from 'react-toastify';
 import { API_BASE_URL } from '../../config/api';
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Icons } from "../../components/ui/icons";
 
 export default function StudentProfile() {
   const [user, setUser] = useState<User | null>(null);
@@ -77,6 +81,8 @@ export default function StudentProfile() {
     try {
       const token = localStorage.getItem('token');
       let profileImageUrl = form.profileImage;
+      
+      // If there's a new image file, upload it first
       if (imageFile) {
         const formData = new FormData();
         formData.append('file', imageFile);
@@ -85,6 +91,8 @@ export default function StudentProfile() {
         });
         profileImageUrl = uploadRes.data.profileImage;
       }
+
+      // Update user profile
       await axios.put(
         `${API_BASE_URL}/users/me`,
         {
@@ -95,6 +103,7 @@ export default function StudentProfile() {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      
       toast.success('پروفایل با موفقیت ذخیره شد');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'خطا در ذخیره پروفایل');
@@ -107,62 +116,89 @@ export default function StudentProfile() {
 
   return (
     <Dashboard user={user} title="پروفایل شاگرد">
-      <div className="max-w-xl mx-auto bg-white p-6 rounded-xl shadow space-y-8">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">پروفایل من</h2>
+      <div className="max-w-xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg space-y-8">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">پروفایل من</h2>
+        
         <div className="flex flex-col items-center gap-4">
-          <img
-            src={form.profileImage || '/default-avatar.png'}
-            alt="avatar"
-            className="w-24 h-24 rounded-full object-cover border"
+          <div className="relative group">
+            <img
+              src={form.profileImage || '/default-avatar.png'}
+              alt="avatar"
+              className="w-32 h-32 rounded-full object-cover border-4 border-primary-200 dark:border-primary-800 transition-all duration-300 group-hover:border-primary-400 dark:group-hover:border-primary-600"
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <Label htmlFor="profile-image" className="cursor-pointer text-white text-sm">
+                تغییر عکس
+              </Label>
+            </div>
+          </div>
+          <Input
+            id="profile-image"
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="hidden"
           />
-          <input type="file" accept="image/*" onChange={handleImageChange} />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block mb-1">نام</label>
-            <input
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="name">نام</Label>
+            <Input
+              id="name"
               name="name"
               value={form.name}
               onChange={handleChange}
-              className="w-full p-2 border rounded-lg bg-gray-100"
+              className="h-12 text-lg"
             />
           </div>
-          <div>
-            <label className="block mb-1">نام خانوادگی</label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="family">نام خانوادگی</Label>
+            <Input
+              id="family"
               name="family"
               value={form.family}
               onChange={handleChange}
-              className="w-full p-2 border rounded-lg bg-gray-100"
+              className="h-12 text-lg"
             />
           </div>
-          <div>
-            <label className="block mb-1">سن</label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="age">سن</Label>
+            <Input
+              id="age"
               name="age"
               type="number"
               value={form.age}
               onChange={handleChange}
-              className="w-full p-2 border rounded-lg bg-gray-100"
+              className="h-12 text-lg"
             />
           </div>
         </div>
-        <button
+
+        <Button
           onClick={handleSave}
-          className="w-full py-3 bg-blue-600 text-white rounded-lg mt-4"
+          className="w-full h-12 text-lg bg-primary-600 hover:bg-primary-700 text-white transition-all duration-300"
           disabled={loading}
         >
-          {loading ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
-        </button>
-        <div className="mt-8 bg-gray-50 p-4 rounded-xl">
-          <h3 className="font-bold mb-2">مربی من</h3>
+          {loading ? (
+            <>
+              <Icons.spinner className="mr-2 h-5 w-5 animate-spin" />
+              در حال ذخیره...
+            </>
+          ) : (
+            'ذخیره تغییرات'
+          )}
+        </Button>
+
+        <div className="mt-8 bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl">
+          <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">مربی من</h3>
           {coach ? (
-            <div>
+            <div className="space-y-2 text-gray-700 dark:text-gray-300">
               <div>نام مربی: {coach.name}</div>
               <div>شماره تماس: {coach.phone}</div>
             </div>
           ) : (
-            <div className="text-gray-500">مربی انتخاب نشده است.</div>
+            <div className="text-gray-500 dark:text-gray-400">مربی انتخاب نشده است.</div>
           )}
         </div>
       </div>

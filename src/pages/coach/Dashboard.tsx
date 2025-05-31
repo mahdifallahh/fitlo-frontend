@@ -10,6 +10,9 @@ import Programs from "./Programs";
 import { FaUser, FaUsers, FaClipboardList, FaListAlt, FaTags, FaGlobe, FaStar } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { API_ENDPOINTS } from "../../config/api";
+import { Sidebar } from "../../components/ui/Sidebar";
+import { ThemeSwitcher } from "../../components/ui/ThemeSwitcher";
+import { SampleForm } from "../../components/ui/SampleForm";
 
 export default function CoachDashboard() {
   const token = localStorage.getItem("token");
@@ -50,7 +53,7 @@ export default function CoachDashboard() {
   return (
     <div className="flex min-h-screen w-screen">
       {/* سایدبار - موبایل */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-blue-700 text-white flex justify-between items-center px-4 py-3 shadow z-20">
+      <div className="xl:hidden fixed top-0 left-0 right-0 bg-primary-700 text-white flex justify-between items-center px-4 py-3 shadow z-20">
         <h2 className="text-lg font-bold">پنل مربی</h2>
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -70,7 +73,7 @@ export default function CoachDashboard() {
           {/* Sidebar */}
           <div
             className={`
-              absolute top-0 right-0 w-64 h-full bg-gradient-to-b from-blue-700 to-blue-500 text-white flex flex-col shadow-2xl
+              absolute top-0 right-0 w-64 h-full bg-primary-700 text-white flex flex-col shadow-2xl
               transition-transform duration-300
               ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}
               pointer-events-auto
@@ -89,9 +92,9 @@ export default function CoachDashboard() {
             <div className="flex-1 overflow-y-auto flex flex-col">
               {/* پروفایل کاربر */}
               <div className="flex flex-col items-center space-y-2 mb-6">
-                {user.profileImage ? (
+                {user.signedProfilePictureUrl ? (
                   <img
-                    src={user.profileImage}
+                    src={user.signedProfilePictureUrl}
                     alt="profile"
                     className="w-16 h-16 rounded-full object-cover border-2 border-white"
                   />
@@ -137,62 +140,23 @@ export default function CoachDashboard() {
       )}
 
       {/* Sidebar for desktop */}
-      <div className="hidden md:flex w-64 min-h-screen bg-blue-700 text-white flex-col fixed top-0 right-0 bottom-0">
-        <div className="flex flex-col h-full">
-          {/* Scrollable area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {/* پروفایل کاربر */}
-            <div className="flex flex-col items-center space-y-2 mb-6">
-              {user.profileImage ? (
-                <img
-                  src={user.profileImage}
-                  alt="profile"
-                  className="w-16 h-16 rounded-full object-cover border-2 border-white"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-full bg-white text-blue-700 flex items-center justify-center text-xl font-bold">
-                  👤
-                </div>
-              )}
-              <p className="text-sm font-bold text-center">
-                {user.name || "بدون نام"}
-              </p>
-            </div>
-            {/* منو */}
-            <div className="flex flex-col space-y-2">
-              {menu.map((item) => (
-                <button
-                  key={item.key}
-                  onClick={() => {
-                    setActive(item.key);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={`w-full text-right py-2 px-3 rounded-xl transition ${
-                    active === item.key
-                      ? "bg-white text-blue-700 font-bold"
-                      : "hover:bg-blue-600"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          {/* Sticky logout button */}
-          <div className="p-4">
-            <button
-              onClick={handleLogout}
-              className="w-full bg-red-600 text-white py-2 rounded-xl hover:bg-red-700 transition"
-            >
-              خروج
-            </button>
-          </div>
-        </div>
+      <div className="hidden xl:block">
+        <Sidebar 
+          menu={menu} 
+          active={active} 
+          onSelect={setActive} 
+          user={user}
+          onLogout={handleLogout}
+        />
       </div>
 
       {/* محتوا */}
-      <div className="flex-1 bg-gray-50 p-8 overflow-y-auto mt-14 md:mt-0 md:mr-64 w-full">
+      <div className="flex-1 bg-gray-50 dark:bg-gray-900 p-8 overflow-y-auto mt-14 xl:mt-0 xl:mr-64 w-full">
         <div className="w-full max-w-full">
+          <div className="flex justify-end mb-4">
+            <ThemeSwitcher />
+          </div>
+          
           {active === "profile" && <CoachProfile />}
           {active === "students" && <Students />}
           {active === "exercises" && <Exercises />}

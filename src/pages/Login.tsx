@@ -6,6 +6,12 @@ import { toast } from "react-toastify";
 import { API_ENDPOINTS } from "../config/api";
 import { motion, AnimatePresence } from "framer-motion";
 import Logo from "../components/Logo";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
+import { Label } from "../components/ui/label";
+import { Icons } from "../components/ui/icons";
+import { cn } from "../lib/utils";
 
 // Utility function to convert Persian/Arabic numbers to English
 const convertToEnglishNumbers = (str: string): string => {
@@ -198,319 +204,228 @@ export default function Login() {
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 }
-  };
-
   return (
-    <div className="w-screen h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-primary-100 to-primary-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-        className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md space-y-6 relative"
-        dir="rtl"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
       >
-        <motion.button
-          onClick={handleBack}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          className="absolute top-4 left-4 text-gray-500 hover:text-gray-700 transition-colors bg-gray-100 p-2 rounded-full hover:bg-gray-200"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M14 5l7 7m0 0l-7 7m7-7H3"
-            />
-          </svg>
-        </motion.button>
-
-        <div className="flex justify-center mb-6">
-          <Logo size="lg" />
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-center"
-        >
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">
-            {step === "phone" && "ورود به "}
-            {step === "login" && "ورود به "}
-            {step === "register" && "ثبت نام در "}
-            {step === "reset" && "بازیابی رمز عبور "}
-            <span className="text-blue-600">Fitlo</span>
-          </h2>
-          <p className="text-gray-500 text-sm">
-            {step === "phone" && "برای ورود یا ثبت نام، شماره موبایل خود را وارد کنید"}
-            {step === "login" && "رمز عبور خود را وارد کنید"}
-            {step === "register" && "اطلاعات ثبت نام را وارد کنید"}
-            {step === "reset" && "رمز عبور جدید خود را تنظیم کنید"}
-          </p>
-        </motion.div>
-
-        <AnimatePresence mode="wait">
-          {step === "phone" && (
-            <motion.div
-              key="phone"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              transition={{ duration: 0.3 }}
-              className="space-y-4"
+        <Card className="border-none shadow-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
+          <CardHeader className="space-y-1">
+            <motion.div 
+              className="flex justify-center mb-4"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
             >
-              <div className="space-y-2">
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 text-right">
-                  شماره تلفن
-                </label>
-                <motion.input
-                  whileFocus={{ scale: 1.02 }}
-                  id="phone"
-                  type="text"
-                  placeholder="شماره تلفن"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-right bg-gray-50 transition-all duration-200"
-                  dir="rtl"
-                />
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleCheckPhone}
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mx-auto"
-                  />
-                ) : (
-                  "بررسی شماره"
-                )}
-              </motion.button>
+              <Logo className="h-16 w-auto" />
             </motion.div>
-          )}
+            <CardTitle className="text-3xl text-center font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
+              {step === "phone" && "ورود به حساب کاربری"}
+              {step === "login" && "رمز عبور را وارد کنید"}
+              {step === "reset" && "بازیابی رمز عبور"}
+              {step === "register" && "ثبت نام"}
+            </CardTitle>
+            <CardDescription className="text-center text-base text-gray-600 dark:text-gray-400">
+              {step === "phone" && "شماره موبایل خود را وارد کنید"}
+              {step === "login" && "رمز عبور حساب کاربری خود را وارد کنید"}
+              {step === "reset" && "کد تایید ارسال شده را وارد کنید"}
+              {step === "register" && "اطلاعات حساب کاربری خود را وارد کنید"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                {step === "phone" && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="text-base text-gray-700 dark:text-gray-300">شماره موبایل</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="09xxxxxxxxx"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="text-left h-12 text-lg border-primary-200  focus:ring-primary-500 bg-white"
+                      />
+                    </div>
+                    <Button
+                      className="w-full h-12 text-lg bg-primary-600 hover:bg-primary-700 text-white transition-all duration-300"
+                      onClick={handleCheckPhone}
+                      disabled={loading || !phone.trim()}
+                    >
+                      {loading ? (
+                        <Icons.spinner className="mr-2 h-5 w-5 animate-spin" />
+                      ) : (
+                        "ادامه"
+                      )}
+                    </Button>
+                  </div>
+                )}
 
-          {step === "login" && (
-            <motion.div
-              key="login"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              transition={{ duration: 0.3 }}
-              className="space-y-4"
+                {step === "login" && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-base text-gray-700 dark:text-gray-300">رمز عبور</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="h-12 text-lg border-primary-200 focus:border-primary-500 focus:ring-primary-500 bg-white"
+                      />
+                    </div>
+                    <Button
+                      className="w-full h-12 text-lg bg-primary-600 hover:bg-primary-700 text-white transition-all duration-300"
+                      onClick={handleLogin}
+                      disabled={loading || !password.trim()}
+                    >
+                      {loading ? (
+                        <Icons.spinner className="mr-2 h-5 w-5 animate-spin" />
+                      ) : (
+                        "ورود"
+                      )}
+                    </Button>
+                    <Button
+                      variant="link"
+                      className="w-full text-base text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                      onClick={handleForgotPassword}
+                    >
+                      فراموشی رمز عبور
+                    </Button>
+                  </div>
+                )}
+
+                {step === "reset" && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="otp" className="text-base text-gray-700 dark:text-gray-300">کد تایید</Label>
+                      <Input
+                        id="otp"
+                        type="text"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        className="text-left h-12 text-lg border-primary-200 focus:border-primary-500 focus:ring-primary-500 bg-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword" className="text-base text-gray-700 dark:text-gray-300">رمز عبور جدید</Label>
+                      <Input
+                        id="newPassword"
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="h-12 text-lg border-primary-200 focus:border-primary-500 focus:ring-primary-500 bg-white"
+                      />
+                    </div>
+                    <Button
+                      className="w-full h-12 text-lg bg-primary-600 hover:bg-primary-700 text-white transition-all duration-300"
+                      onClick={handleResetPassword}
+                      disabled={loading || !otp.trim() || !newPassword.trim()}
+                    >
+                      {loading ? (
+                        <Icons.spinner className="mr-2 h-5 w-5 animate-spin" />
+                      ) : (
+                        "تغییر رمز عبور"
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 text-lg border-2 border-primary-200 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300"
+                      onClick={handleSendOtp}
+                      disabled={resendDisabled}
+                    >
+                      {resendDisabled
+                        ? `ارسال مجدد (${cooldown})`
+                        : "ارسال مجدد کد"}
+                    </Button>
+                  </div>
+                )}
+
+                {step === "register" && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="otp" className="text-base text-gray-700 dark:text-gray-300">کد تایید</Label>
+                      <Input
+                        id="otp"
+                        type="text"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        className="text-left h-12 text-lg border-primary-200 focus:border-primary-500 focus:ring-primary-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-base text-gray-700 dark:text-gray-300">رمز عبور</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="h-12 text-lg border-primary-200 focus:border-primary-500 focus:ring-primary-500"
+                      />
+                    </div>
+                    <Button
+                      className="w-full h-12 text-lg bg-primary-600 hover:bg-primary-700 text-white transition-all duration-300"
+                      onClick={handleRegister}
+                      disabled={loading || !otp.trim() || !password.trim()}
+                    >
+                      {loading ? (
+                        <Icons.spinner className="mr-2 h-5 w-5 animate-spin" />
+                      ) : (
+                        "ثبت نام"
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 text-lg border-2 border-primary-200 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300"
+                      onClick={handleSendOtp}
+                      disabled={resendDisabled}
+                    >
+                      {resendDisabled
+                        ? `ارسال مجدد (${cooldown})`
+                        : "ارسال مجدد کد"}
+                    </Button>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            {message && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className={cn(
+                  "w-full p-4 rounded-lg text-base font-medium",
+                  message.includes("✅")
+                    ? "bg-green-50 text-green-700 dark:bg-green-900/50 dark:text-green-400"
+                    : message.includes("❌")
+                    ? "bg-red-50 text-red-700 dark:bg-red-900/50 dark:text-red-400"
+                    : "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400"
+                )}
+              >
+                {message}
+              </motion.div>
+            )}
+            <Button
+              variant="ghost"
+              className="w-full h-12 text-base text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-300"
+              onClick={handleBack}
             >
-              <div className="space-y-2">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 text-right">
-                  رمز عبور
-                </label>
-                <motion.input
-                  whileFocus={{ scale: 1.02 }}
-                  id="password"
-                  type="password"
-                  placeholder="رمز عبور"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-right bg-gray-50 transition-all duration-200"
-                  dir="rtl"
-                />
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleLogin}
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mx-auto"
-                  />
-                ) : (
-                  "ورود"
-                )}
-              </motion.button>
-              <motion.p
-                whileHover={{ scale: 1.02 }}
-                className="text-sm text-blue-500 text-center mt-2 cursor-pointer hover:underline"
-                onClick={handleForgotPassword}
-              >
-                فراموشی رمز عبور
-              </motion.p>
-            </motion.div>
-          )}
-
-          {step === "reset" && (
-            <motion.div
-              key="reset"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              transition={{ duration: 0.3 }}
-              className="space-y-4"
-            >
-              <div className="space-y-2">
-                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 text-right">
-                  کد تایید
-                </label>
-                <motion.input
-                  whileFocus={{ scale: 1.02 }}
-                  id="otp"
-                  type="text"
-                  placeholder="کد ارسال شده"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 text-right bg-gray-50 transition-all duration-200"
-                  dir="rtl"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 text-right">
-                  رمز عبور جدید
-                </label>
-                <motion.input
-                  whileFocus={{ scale: 1.02 }}
-                  id="newPassword"
-                  type="password"
-                  placeholder="رمز عبور جدید"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 text-right bg-gray-50 transition-all duration-200"
-                  dir="rtl"
-                />
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleResetPassword}
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mx-auto"
-                  />
-                ) : (
-                  "تغییر رمز عبور"
-                )}
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleSendOtp}
-                disabled={resendDisabled}
-                className={`w-full ${
-                  resendDisabled ? "bg-gray-300" : "bg-blue-600 hover:bg-blue-700"
-                } text-white py-2 rounded-xl font-semibold transition-all duration-200 disabled:cursor-not-allowed`}
-              >
-                {resendDisabled ? `ارسال مجدد تا ${cooldown} ثانیه` : "ارسال مجدد کد"}
-              </motion.button>
-            </motion.div>
-          )}
-
-          {step === "register" && (
-            <motion.div
-              key="register"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              transition={{ duration: 0.3 }}
-              className="space-y-4"
-            >
-              <div className="space-y-2">
-                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 text-right">
-                  کد تایید
-                </label>
-                <motion.input
-                  whileFocus={{ scale: 1.02 }}
-                  id="otp"
-                  type="text"
-                  placeholder="کد ارسال شده"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 text-right bg-gray-50 transition-all duration-200"
-                  dir="rtl"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 text-right">
-                  رمز عبور جدید
-                </label>
-                <motion.input
-                  whileFocus={{ scale: 1.02 }}
-                  id="password"
-                  type="password"
-                  placeholder="رمز عبور جدید"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 text-right bg-gray-50 transition-all duration-200"
-                  dir="rtl"
-                />
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleRegister}
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mx-auto"
-                  />
-                ) : (
-                  "ثبت‌نام / فعال‌سازی"
-                )}
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleSendOtp}
-                disabled={resendDisabled}
-                className={`w-full ${
-                  resendDisabled ? "bg-gray-300" : "bg-blue-600 hover:bg-blue-700"
-                } text-white py-2 rounded-xl font-semibold transition-all duration-200 disabled:cursor-not-allowed`}
-              >
-                {resendDisabled ? `ارسال مجدد تا ${cooldown} ثانیه` : "ارسال مجدد کد"}
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {message && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="text-sm text-center text-gray-600 mt-2 p-2 rounded-lg bg-gray-50"
-          >
-            {message}
-          </motion.div>
-        )}
+              {step === "phone" ? "بازگشت به صفحه اصلی" : "بازگشت"}
+            </Button>
+          </CardFooter>
+        </Card>
       </motion.div>
     </div>
   );

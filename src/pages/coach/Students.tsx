@@ -1,33 +1,89 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import ConfirmModal from "../../components/ConfirmModal";
-import SmartList from "../../components/SmartList";
-import { Eye, EyeOff } from "lucide-react";
-import { API_ENDPOINTS } from "../../config/api";
-import Modal from "../../components/Modal";
+import { API_ENDPOINTS, getUploadUrl } from "../../config/api";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "../../components/ui/card";
+import {
+  Form,
+  FormField,
+  FormLabel,
+  FormInput,
+  FormButton,
+} from "../../components/ui/form";
+import { DataTable } from "../../components/ui/data-table";
+import { Button } from "../../components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
 
 interface Student {
   _id: string;
   name: string;
   phone: string;
+  signedProfilePictureUrl?: string;
+  lastActive?: string;
+  status?: "active" | "inactive";
+}
+
+interface ApiResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export default function Students() {
   const token = localStorage.getItem("token");
+  const [students, setStudents] = useState<Student[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", password: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
-  const [refreshFlag, setRefreshFlag] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
-  const [programModalOpen, setProgramModalOpen] = useState(false);
-  const [programData, setProgramData] = useState<any>(null);
-  const [programLoading, setProgramLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
+  const fetchStudents = async (page: number = currentPage, limit: number = itemsPerPage, query: string = searchQuery) => {
+    setIsLoading(true);
+    try {
+      const { data } = await axios.get<ApiResponse<Student>>(API_ENDPOINTS.users.students, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: {
+          page: page,
+          limit: limit,
+          search: query,
+        }
+      });
+      setStudents(data.items);
+      setTotalPages(data.totalPages);
+      setTotalItems(data.total);
+      setCurrentPage(data.page);
+    } catch {
+      toast.error("❌ خطا در دریافت لیست شاگردان");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStudents(currentPage, itemsPerPage, searchQuery);
+  }, [currentPage, searchQuery]);
 
   const handleSubmit = async () => {
-    if (!form.name || !form.phone || (!editingId && !form.password)) {
-      return toast.warn("لطفاً تمام فیلدها را پر کنید");
+    if (!form.name.trim() || !form.phone.trim() || (!editingId && !form.password.trim())) {
+      toast.warn("لطفاً تمام فیلدها را پر کنید");
+      return;
     }
+
+    setIsLoading(true);
     try {
       if (editingId) {
         await axios.put(
@@ -35,19 +91,21 @@ export default function Students() {
           form,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        toast.success("✅ دانش‌آموز با موفقیت ویرایش شد");
+        toast.success("✅ شاگرد با موفقیت ویرایش شد");
       } else {
         await axios.post(API_ENDPOINTS.users.students, form, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        toast.success("✅ دانش‌آموز با موفقیت اضافه شد");
+        toast.success("✅ شاگرد با موفقیت اضافه شد");
       }
       setForm({ name: "", phone: "", password: "" });
       setEditingId(null);
-      setRefreshFlag((f) => f + 1);
+      fetchStudents();
     } catch (err: any) {
       const msg = err.response?.data?.message || "خطا در ثبت اطلاعات";
       toast.error("❌ " + msg);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -56,167 +114,183 @@ export default function Students() {
     setForm({ name: student.name, phone: student.phone, password: "" });
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async () => {
+    if (!confirmId) return;
+    setIsLoading(true);
     try {
-      await axios.delete(`${API_ENDPOINTS.users.students}/${id}`, {
+      await axios.delete(`${API_ENDPOINTS.users.students}/${confirmId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("✅ دانش‌آموز حذف شد");
-      setRefreshFlag((f) => f + 1);
-    } catch {
-      toast.error("❌ خطا در حذف دانش‌آموز");
-    } finally {
+      toast.success("✅ شاگرد حذف شد");
       setConfirmId(null);
+      fetchStudents();
+    } catch {
+      toast.error("❌ خطا در حذف شاگرد");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleViewProgram = async (student: Student) => {
-    setProgramLoading(true);
-    setProgramModalOpen(true);
-    try {
-      const { data } = await axios.get(`${API_ENDPOINTS.programs}?studentId=${student._id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      // فرض: فقط یک برنامه فعال برای هر شاگرد
-      setProgramData(data.items?.[0] || null);
-    } catch (err) {
-      toast.error("خطا در دریافت برنامه شاگرد");
-      setProgramData(null);
-    } finally {
-      setProgramLoading(false);
-    }
-  };
+  const columns = [
+    {
+      header: "نام",
+      accessorKey: "name" as keyof Student,
+    },
+    {
+      header: "شماره تلفن",
+      accessorKey: "phone" as keyof Student,
+    },
+    {
+      header: "آخرین فعالیت",
+      accessorKey: "lastActive" as keyof Student,
+      cell: (student: Student) => (
+        <span className="text-primary-500 dark:text-primary-400">
+          {student.lastActive ? new Date(student.lastActive).toLocaleDateString("fa-IR") : "نامشخص"}
+        </span>
+      ),
+    },
+    {
+      header: "وضعیت",
+      accessorKey: "status" as keyof Student,
+      cell: (student: Student) => (
+        <span className={`font-medium ${student.status === "active" ? "text-green-500" : "text-red-500"}`}>
+          {student.status === "active" ? "فعال" : "غیرفعال"}
+        </span>
+      ),
+    },
+    {
+      header: "عملیات",
+      accessorKey: "_id" as keyof Student,
+      cell: (student: Student) => (
+        <div className="flex flex-col gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleEdit(student)}
+            className="w-full h-8 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800"
+          >
+            ویرایش
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setConfirmId(student._id)}
+            className="w-full h-8 text-xs bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800"
+          >
+            حذف
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto p-4 space-y-8">
-      {/* فرم افزودن شاگرد */}
-      <div className="bg-white shadow-lg rounded-2xl p-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
-          📋 مدیریت شاگردها
-        </h2>
-
-        <div className="grid md:grid-cols-3 gap-4">
-          <input
-            type="text"
-            className="border p-3 rounded-xl bg-gray-100 text-black"
-            placeholder="نام کامل"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-          />
-          <input
-            type="text"
-            className="border p-3 rounded-xl bg-gray-100 text-black"
-            placeholder="شماره تلفن"
-            value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-          />
-        
-            <div className="relative w-full">
-              <input
-                type={showPassword ? "text" : "password"}
-                className="border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none p-3 rounded-xl bg-gray-100 text-black w-full pr-12"
-                placeholder="رمز عبور اولیه"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      {/* فرم افزودن/ویرایش شاگرد */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{editingId ? "ویرایش شاگرد" : "افزودن شاگرد جدید"}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form>
+            <FormField>
+              <FormLabel>نام کامل</FormLabel>
+              <FormInput
+                type="text"
+                placeholder="نام کامل"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 focus:outline-none border-none shadow-none bg-transparent"
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-       
+            </FormField>
+            <FormField>
+              <FormLabel>شماره تلفن</FormLabel>
+              <FormInput
+                type="text"
+                placeholder="شماره تلفن"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
+            </FormField>
+            {!editingId && (
+              <FormField>
+                <FormLabel>رمز عبور اولیه</FormLabel>
+                <div className="relative">
+                  <FormInput
+                    type={showPassword ? "text" : "password"}
+                    placeholder="رمز عبور اولیه"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    className="pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-500 dark:text-primary-400"
+                  >
+                    {showPassword ? "👁️" : "🙈"}
+                  </button>
+                </div>
+              </FormField>
+            )}
+          </Form>
+        </CardContent>
+        <CardFooter className="justify-end">
+          {editingId && (
+            <FormButton onClick={() => setEditingId(null)} className="ml-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">
+              انصراف از ویرایش
+            </FormButton>
+          )}
+          <FormButton onClick={handleSubmit} disabled={isLoading}>
+            {isLoading ? "در حال ذخیره..." : editingId ? "ذخیره تغییرات" : "افزودن شاگرد"}
+          </FormButton>
+        </CardFooter>
+      </Card>
+
+      {/* لیست شاگردان */}
+      <Card>
+        <CardHeader>
+          <CardTitle>لیست شاگردان</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            data={students}
+            columns={columns}
+            searchable
+            searchPlaceholder="جستجو در شاگردان..."
+            onSearch={(query) => {
+              setSearchQuery(query);
+              setCurrentPage(1);
+            }}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
+            isLoading={isLoading}
+            emptyMessage={searchQuery ? "هیچ شاگردی با این نام یافت نشد" : "هنوز هیچ شاگردی ثبت نشده است"}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Confirm Delete Modal */}
+      {confirmId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-sm">
+            <CardHeader>
+              <CardTitle>تایید حذف</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center">آیا از حذف این شاگرد مطمئن هستید؟</p>
+            </CardContent>
+            <CardFooter className="justify-center gap-4">
+              <FormButton onClick={() => setConfirmId(null)} className="border border-primary-200 dark:border-primary-800 bg-transparent hover:bg-primary-100 dark:hover:bg-primary-800">
+                انصراف
+              </FormButton>
+              <FormButton onClick={handleDelete} className="bg-red-500 text-white hover:bg-red-600" disabled={isLoading}>
+                {isLoading ? "در حال حذف..." : "حذف"}
+              </FormButton>
+            </CardFooter>
+          </Card>
         </div>
-
-        <div className="text-right mt-4">
-          <button
-            onClick={handleSubmit}
-            className="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 font-bold"
-          >
-            {editingId ? "💾 ذخیره تغییرات" : "➕ افزودن شاگرد"}
-          </button>
-        </div>
-      </div>
-
-      {/* لیست شاگردها */}
-      <SmartList<Student>
-        key={refreshFlag.toString()}
-        url={API_ENDPOINTS.users.students}
-        title="📋 لیست دانش‌آموزان"
-        token={token || ""}
-        searchPlaceholder="جستجوی نام یا شماره..."
-        columns={[
-          {
-            label: "نام",
-            render: (item) => item.name,
-          },
-          {
-            label: "شماره",
-            render: (item) => item.phone,
-          },
-          {
-            label: "برنامه",
-            render: (item) => (
-              <button
-                className="px-4 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
-                onClick={() => handleViewProgram(item)}
-              >
-                مشاهده برنامه
-              </button>
-            ),
-          },
-        ]}
-        onEdit={handleEdit}
-        onDelete={(id) => setConfirmId(id)}
-      />
-
-      <ConfirmModal
-        open={!!confirmId}
-        message="آیا از حذف این شاگرد مطمئن هستید؟"
-        onConfirm={() => handleDelete(confirmId || "")}
-        onCancel={() => setConfirmId(null)}
-        confirmText="حذف"
-        cancelText="انصراف"
-      />
-
-      <Modal open={programModalOpen} onClose={() => setProgramModalOpen(false)}>
-        {programLoading ? (
-          <div className="p-8 text-center">در حال دریافت برنامه...</div>
-        ) : programData ? (
-          <div className="space-y-6 max-h-[70vh] overflow-y-auto text-black">
-            <h2 className="text-xl font-bold text-blue-700 text-center mb-4">
-              برنامه شاگرد: {programData.studentId?.name}
-            </h2>
-            {programData.days?.map((d: any, idx: number) => (
-              <div key={d.day || idx} className="border border-gray-300 rounded-xl p-4 space-y-3 bg-gray-50">
-                <h3 className="font-bold text-blue-600 text-right">{d.day}</h3>
-                {d.exercises.length === 0 && (
-                  <p className="text-sm text-gray-500">تمرینی برای این روز ثبت نشده</p>
-                )}
-                {d.exercises.map((ex: any, i: number) => (
-                  <div key={i} className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-3">
-                    <div className="flex-1">
-                      <p className="font-semibold">{ex.name}</p>
-                      <div className="flex items-center gap-4 mt-2 text-sm">
-                        <span>ست: {ex.sets || 0}</span>
-                        <span>تکرار: {ex.reps || 0}</span>
-                        {ex.categoryName && <span>دسته‌بندی: {ex.categoryName}</span>}
-                      </div>
-                    </div>
-                    {ex.gifUrl && (
-                      <img src={ex.gifUrl} alt={ex.name} className="w-20 h-20 object-cover rounded" />
-                    )}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="p-8 text-center text-gray-500">برنامه‌ای برای این شاگرد ثبت نشده است.</div>
-        )}
-      </Modal>
+      )}
     </div>
   );
 }

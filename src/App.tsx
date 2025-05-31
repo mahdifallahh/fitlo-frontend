@@ -7,42 +7,56 @@ import PublicTrainer from "./pages/public/PublicTrainer";
 import { ToastContainer } from "react-toastify";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import Landing from './pages/Landing';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/coach/dashboard"
-          element={
-            <ProtectedRoute role="coach">
-              <CoachDashboard />
-            </ProtectedRoute>
-          }
+    <div dir="rtl" className="rtl">
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/coach/dashboard"
+            element={
+              <ProtectedRoute role="coach">
+                <CoachDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/dashboard"
+            element={
+              <ProtectedRoute role="student">
+                <StudentDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute role="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="/public/:phone" element={<PublicTrainer />} />
+        </Routes>
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={true}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="colored"
         />
-        <Route
-          path="/student/dashboard"
-          element={
-            <ProtectedRoute role="student">
-              <StudentDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/dashboard"
-          element={
-            <ProtectedRoute role="admin">
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" />} />
-        <Route path="/public/:phone" element={<PublicTrainer />} />
-      </Routes>
-      <ToastContainer position="top-right" autoClose={3000} />
-    </BrowserRouter>
+      </BrowserRouter>
+    </div>
   );
 }
 

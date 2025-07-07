@@ -4,6 +4,7 @@ import CoachDashboard from "./pages/coach/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicTrainer from "./pages/public/PublicTrainer";
+import SharedExercises from "./pages/public/SharedExercises";
 import { ToastContainer } from "react-toastify";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import Landing from './pages/Landing';
@@ -36,12 +37,13 @@ function App() {
             path="/admin/dashboard"
             element={
               <ProtectedRoute role="admin">
-                <AdminDashboard />
+        <AdminDashboard />
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="/shared-exercises/:shareId" element={<SharedExercises />} />
           <Route path="/public/:phone" element={<PublicTrainer />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
         <ToastContainer
           position="top-right"

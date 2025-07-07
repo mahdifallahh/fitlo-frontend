@@ -1,5 +1,5 @@
-//export const API_BASE_URL = "http://localhost:3000";
-  export const API_BASE_URL = 'https://nest-ttxkob.chbk.app';
+export const API_BASE_URL = "http://localhost:3000";
+//export const API_BASE_URL = 'https://nest-ttxkob.chbk.app';
 
 export const API_ENDPOINTS = {
   auth: {
@@ -20,7 +20,13 @@ export const API_ENDPOINTS = {
 
   categories: `${API_BASE_URL}/categories`,
 
-  exercises: `${API_BASE_URL}/exercises`,
+  exercises: {
+    all: `${API_BASE_URL}/exercises`,
+    share: `${API_BASE_URL}/exercises/share`,
+    validateShare: (shareId: string) => `${API_BASE_URL}/exercises/share/${shareId}/validate`,
+    getSharedExercises: (shareId: string) => `${API_BASE_URL}/exercises/share/${shareId}`,
+    shareForAll:`${API_BASE_URL}/exercises/shared-exercises/toggle-share`
+  },
 
   programs: `${API_BASE_URL}/programs`,
 

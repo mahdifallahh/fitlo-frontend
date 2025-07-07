@@ -131,7 +131,7 @@ export default function StudentProgramDetails() {
               {currentDay.exercises.map((ex, i) => (
                 <div
                   key={ex._id}
-                  className="flex flex-col md:flex-row md:items-center md:justify-between bg-gray-50 rounded-lg p-3 shadow-sm"
+                  className="flex flex-col sm:flex-col md:flex-row md:items-center md:justify-between bg-gray-50 rounded-lg p-3 shadow-sm"
                 >
                   <div>
                     <div className="font-bold text-blue-800">{i + 1}. {ex.name}</div>
@@ -145,7 +145,7 @@ export default function StudentProgramDetails() {
                       href={ex.videoLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-2 md:mt-0 px-4 py-2 bg-green-500 text-white rounded-lg text-xs font-bold hover:bg-green-600 transition-colors"
+                      className="mt-2 sm:mt-2 md:mt-0 px-4 py-2 bg-green-500 text-white rounded-lg text-xs font-bold hover:bg-green-600 transition-colors"
                     >
                       مشاهده ویدیو
                     </a>
@@ -160,4 +160,4 @@ export default function StudentProgramDetails() {
       </main>
     </div>
   );
-} 
+}

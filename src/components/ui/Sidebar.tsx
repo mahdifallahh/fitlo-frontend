@@ -6,7 +6,7 @@ interface SidebarProps {
   menu: { key: string; label: string; icon?: React.ReactNode }[];
   active: string;
   onSelect: (key: string) => void;
-  user?: { name?: string; profileImage?: string };
+  user?: { name?: string; signedProfilePictureUrl?: string };
   className?: string;
   onLogout?: () => void;
 }
@@ -23,9 +23,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ menu, active, onSelect, user, 
       <div className="flex flex-col h-full">
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <div className="flex flex-col items-center space-y-2 mb-6">
-            {user?.profileImage ? (
+            {user?.signedProfilePictureUrl ? (
               <img
-                src={getUploadUrl(user.profileImage)}
+                src={user?.signedProfilePictureUrl}
                 alt="profile"
                 className="w-16 h-16 rounded-full object-cover border-2 border-white"
               />

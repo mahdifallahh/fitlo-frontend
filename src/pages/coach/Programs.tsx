@@ -332,7 +332,7 @@ export default function Programs() {
                   <Button
                     onClick={handleSubmitFullProgram}
                     disabled={programDays.length === 0 || isSubmittingProgram}
-                    className="w-full bg-primary hover:bg-primary/90 h-9 sm:h-10 text-xs sm:text-sm"
+                    className="w-full bg-primary-600 hover:bg-primary-700 text-white dark:text-black h-9 sm:h-10 text-xs sm:text-sm "
                   >
                     {isSubmittingProgram ? (
                       <span className="flex items-center">

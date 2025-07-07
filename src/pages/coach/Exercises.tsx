@@ -1,27 +1,34 @@
-import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
+import { Loader2, Share2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../components/ConfirmModal";
-import { API_BASE_URL, API_ENDPOINTS } from "../../config/api";
+import ShareExercisesModal from "../../components/exercises/ShareExercisesModal";
+import { Button } from "../../components/ui/button";
 import {
   Card,
-  CardHeader,
-  CardTitle,
   CardContent,
   CardFooter,
+  CardHeader,
+  CardTitle,
 } from "../../components/ui/card";
+import { DataTable } from "../../components/ui/data-table";
 import {
   Form,
-  FormField,
-  FormLabel,
-  FormInput,
   FormButton,
+  FormField,
+  FormInput,
+  FormLabel,
 } from "../../components/ui/form";
-import { DataTable } from "../../components/ui/data-table";
-import { Button } from "../../components/ui/button";
-import { ChevronLeft, ChevronRight, MoreHorizontal, Search, Loader2 } from "lucide-react";
-import { cn } from "../../lib/utils";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import { API_BASE_URL, API_ENDPOINTS } from "../../config/api";
 
 interface Category {
   _id: string;
@@ -49,20 +56,25 @@ interface ApiResponse<T> {
 
 export default function Exercises() {
   const token = localStorage.getItem("token");
+  const [showShareModal, setShowShareModal] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
   const [name, setName] = useState("");
   const [videoLink, setVideoLink] = useState("");
   const [gifFile, setGifFile] = useState<File | null>(null);
   const [refreshFlag, setRefreshFlag] = useState(0);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [isPremium, setIsPremium] = useState(false);
-  
+  const [isShareForAll, setIsShareForAll] = useState(false);
+  const { shareId } = useParams();
+
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1); 
+  const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 10;
 
   const fetchCategories = async () => {
@@ -90,15 +102,22 @@ export default function Exercises() {
     }
   };
 
-  const fetchExercises = async (page: number = currentPage, limit: number = itemsPerPage, query: string = searchQuery) => {
+  const fetchExercises = async (
+    page: number = currentPage,
+    limit: number = itemsPerPage,
+    query: string = searchQuery
+  ) => {
     setIsLoading(true);
     try {
-      const { data } = await axios.get<ApiResponse<Exercise>>(`${API_ENDPOINTS.exercises}?page=${page}&limit=${limit}&search=${query}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axios.get<ApiResponse<Exercise>>(
+        `${API_ENDPOINTS.exercises}?page=${page}&limit=${limit}&search=${query}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setExercises(data.items);
-      setTotalPages(data.totalPages); 
-      setCurrentPage(data.page); 
+      setTotalPages(data.totalPages);
+      setCurrentPage(data.page);
     } catch {
       toast.error("❌ خطا در بارگذاری تمرینات");
       setExercises([]);
@@ -118,9 +137,9 @@ export default function Exercises() {
     fetchExercises(currentPage, itemsPerPage, searchQuery);
   }, [currentPage, searchQuery, refreshFlag]);
 
-  const categoryItems = categories.map(cat => ({
+  const categoryItems = categories.map((cat) => ({
     value: cat._id,
-    label: cat.name
+    label: cat.name,
   }));
 
   const handleSubmit = async () => {
@@ -137,7 +156,7 @@ export default function Exercises() {
     if (gifFile) formData.append("gif", gifFile);
 
     try {
-      await axios.post(API_ENDPOINTS.exercises, formData, {
+      await axios.post(API_ENDPOINTS.exercises.all, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
@@ -149,7 +168,9 @@ export default function Exercises() {
       setSelectedCategoryId(null);
       setVideoLink("");
       setGifFile(null);
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const fileInput = document.querySelector(
+        'input[type="file"]'
+      ) as HTMLInputElement;
       if (fileInput) {
         fileInput.value = "";
       }
@@ -175,6 +196,41 @@ export default function Exercises() {
     }
   };
 
+  const toggleShareForAll = async () => {
+    try {
+      await axios.put(
+        `${API_ENDPOINTS.exercises.shareForAll}`,
+        {
+          isShareForAll: !isShareForAll,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setIsShareForAll(!isShareForAll);
+      toast.success("✅ وضعیت اشتراک‌گذاری تغییر کرد");
+    } catch (error) {
+      toast.error("❌ خطا در تغییر وضعیت اشتراک‌گذاری");
+    }
+  };
+
+  useEffect(() => {
+    const fetchShareStatus = async () => {
+      try {
+        const { data } = await axios.get(
+          `${API_ENDPOINTS.exercises}/share-status`
+        );
+        setIsShareForAll(data.isShareForAll);
+      } catch (error) {
+        toast.error("❌ خطا در بارگذاری وضعیت اشتراک‌گذاری");
+      }
+    };
+
+    fetchShareStatus();
+  }, []);
+
   const getImageUrl = (url: string) => {
     if (!url) return "";
     if (url.startsWith("http")) return url;
@@ -196,16 +252,36 @@ export default function Exercises() {
     {
       header: "لینک ویدیو",
       accessorKey: "videoLink" as keyof Exercise,
-      cell: (exercise: Exercise) => (
-        exercise.videoLink ? <a href={exercise.videoLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">لینک</a> : <span>ندارد</span>
-      ),
+      cell: (exercise: Exercise) =>
+        exercise.videoLink ? (
+          <a
+            href={exercise.videoLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            لینک
+          </a>
+        ) : (
+          <span>ندارد</span>
+        ),
     },
     {
       header: "گیف",
       accessorKey: "gifUrl" as keyof Exercise,
-      cell: (exercise: Exercise) => (
-        exercise.gifUrl ? <a href={getImageUrl(exercise.gifUrl)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">نمایش</a> : <span>ندارد</span>
-      ),
+      cell: (exercise: Exercise) =>
+        exercise.gifUrl ? (
+          <a
+            href={getImageUrl(exercise.gifUrl)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            نمایش
+          </a>
+        ) : (
+          <span>ندارد</span>
+        ),
     },
     {
       header: "عملیات",
@@ -234,6 +310,10 @@ export default function Exercises() {
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
+      <ShareExercisesModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+      />
       <Card>
         <CardHeader>
           <CardTitle>🏋️‍♂️ افزودن تمرین جدید</CardTitle>
@@ -255,7 +335,11 @@ export default function Exercises() {
                 <FormField className="flex-1">
                   <FormLabel>دسته‌بندی</FormLabel>
                   <Select
-                    value={selectedCategoryId === null ? undefined : selectedCategoryId}
+                    value={
+                      selectedCategoryId === null
+                        ? undefined
+                        : selectedCategoryId
+                    }
                     onValueChange={(value) => {
                       setSelectedCategoryId(value === "none" ? null : value);
                     }}
@@ -315,7 +399,7 @@ export default function Exercises() {
           </Form>
         </CardContent>
         <CardFooter className="justify-end">
-           <FormButton onClick={handleSubmit} disabled={isLoading}>
+          <FormButton onClick={handleSubmit} disabled={isLoading}>
             {isLoading ? (
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -326,19 +410,38 @@ export default function Exercises() {
             )}
           </FormButton>
         </CardFooter>
-      </Card>
-
+      </Card>{" "}
       <Card>
         <CardHeader>
-          <CardTitle>لیست تمرینات</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>لیست تمرینات</CardTitle>
+            <Button
+              onClick={() => setShowShareModal(true)}
+              variant="outline"
+              className="gap-2"
+            >
+              <Share2 className="w-4 h-4" />
+              اشتراک‌گذاری تمرینات
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-           <DataTable
-            data={exercises}
+          <div className="flex justify-between items-center mb-4">
+            <Button
+              onClick={toggleShareForAll}
+              className="bg-blue-500 text-white px-4 py-2 rounded"
+            >
+              {isShareForAll
+                ? "غیرفعال کردن اشتراک‌گذاری عمومی"
+                : "فعال کردن اشتراک‌گذاری عمومی"}
+            </Button>
+          </div>
+          <DataTable
+            data={exercises || []} // Ensure data is always an array
             columns={columns}
             searchable
             searchPlaceholder="جستجو در تمرینات..."
-             onSearch={(query) => {
+            onSearch={(query) => {
               setSearchQuery(query);
               setCurrentPage(1);
             }}
@@ -346,11 +449,14 @@ export default function Exercises() {
             totalPages={totalPages}
             onPageChange={(page) => setCurrentPage(page)}
             isLoading={isLoading}
-            emptyMessage={searchQuery ? "هیچ تمرینی با این نام یافت نشد" : "هنوز هیچ تمرینی ثبت نشده است"}
+            emptyMessage={
+              searchQuery
+                ? "هیچ تمرینی با این نام یافت نشد"
+                : "هنوز هیچ تمرینی ثبت نشده است"
+            }
           />
         </CardContent>
       </Card>
-
       {confirmId && (
         <ConfirmModal
           open={!!confirmId}

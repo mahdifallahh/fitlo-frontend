@@ -13,6 +13,7 @@ import { API_ENDPOINTS } from "../../config/api";
 import { Sidebar } from "../../components/ui/Sidebar";
 import { ThemeSwitcher } from "../../components/ui/ThemeSwitcher";
 import { SampleForm } from "../../components/ui/SampleForm";
+import { motion } from "framer-motion";
 
 export default function CoachDashboard() {
   const token = localStorage.getItem("token");
@@ -55,12 +56,19 @@ export default function CoachDashboard() {
       {/* سایدبار - موبایل */}
       <div className="xl:hidden fixed top-0 left-0 right-0 bg-primary-700 text-white flex justify-between items-center px-4 py-3 shadow z-20">
         <h2 className="text-lg font-bold">پنل مربی</h2>
-        <button
+        {/* Toggle button for mobile menu */}
+        <motion.button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="text-white text-2xl"
+          whileHover={{ scale: 1.2 }}
+          whileTap={{ scale: 0.9 }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          aria-label="باز کردن منو"
         >
           ☰
-        </button>
+        </motion.button>
       </div>
 
       {isMobileMenuOpen && (
@@ -71,23 +79,26 @@ export default function CoachDashboard() {
             onClick={() => setIsMobileMenuOpen(false)}
           ></div>
           {/* Sidebar */}
-          <div
-            className={`
-              absolute top-0 right-0 w-64 h-full bg-primary-700 text-white flex flex-col shadow-2xl
-              transition-transform duration-300
-              ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}
-              pointer-events-auto
-            `}
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: isMobileMenuOpen ? "0%" : "100%" }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="absolute top-0 right-0 w-64 h-full bg-primary-700 text-white flex flex-col shadow-2xl pointer-events-auto"
             style={{ direction: "rtl" }}
           >
             {/* Close button */}
-            <button
-              className="self-end text-2xl mb-2 hover:text-blue-200 transition"
+            <motion.button
+              className="self-end text-2xl mb-2 p-2 rounded-full text-white transition"
               onClick={() => setIsMobileMenuOpen(false)}
               aria-label="بستن"
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.9 }}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 50 }}
             >
               ×
-            </button>
+            </motion.button>
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto flex flex-col">
               {/* پروفایل کاربر */}
@@ -119,7 +130,7 @@ export default function CoachDashboard() {
                     className={`w-full flex flex-row-reverse items-center justify-end text-right py-2 px-3 rounded-xl transition font-medium ${
                       active === item.key
                         ? "bg-white text-blue-700 font-bold shadow"
-                        : "hover:bg-blue-600 hover:scale-105"
+                        : "hover:bg-primary-600 hover:scale-105"
                     }`}
                   >
                     {item.label}
@@ -135,7 +146,7 @@ export default function CoachDashboard() {
             >
               خروج
             </button>
-          </div>
+          </motion.div>
         </div>
       )}
 

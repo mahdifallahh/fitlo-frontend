@@ -1,16 +1,17 @@
-import { useEffect, useState } from "react";
 import axios from "axios";
+import { FilterIcon, SearchIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { API_ENDPOINTS } from "../config/api";
 import { Exercise, SelectedExercise } from "../types/exercise";
-import { Card, CardContent } from "./ui/card";
-import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
 import { Checkbox } from "./ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { Modal } from "./ui/modal";
 import { ScrollArea } from "./ui/scroll-area";
-import { SearchIcon, FilterIcon } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 interface Props {
   allExercises: Exercise[];
@@ -28,6 +29,8 @@ export default function ExerciseSelector({
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selected, setSelected] = useState<SelectedExercise[]>([]);
   const [search, setSearch] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -56,15 +59,28 @@ export default function ExerciseSelector({
     if (exists) {
       setSelected((prev) => prev.filter((e) => e._id !== exercise._id));
     } else {
-      setSelected((prev) => [
-        ...prev,
-        {
-          ...exercise,
-          sets: "",
-          reps: "",
-        },
-      ]);
+      setCurrentExercise({ ...exercise, sets: "", reps: "" });
+      setModalOpen(true);
     }
+  };
+
+  const handleModalSave = (sets: string, reps: string, description?: string) => {
+    setSelected((prev) => {
+      if (!currentExercise || !currentExercise._id) return prev;
+      const exists = prev.find((e) => e._id === currentExercise._id);
+      if (exists) {
+        return prev.map((e) =>
+          e._id === currentExercise._id ? { ...e, sets, reps, description } : e
+        );
+      } else {
+        return [
+          ...prev,
+          { ...currentExercise, sets, reps, description },
+        ];
+      }
+    });
+    setModalOpen(false);
+    setCurrentExercise(null);
   };
 
   const handleChange = (id: string, field: "sets" | "reps", value: string) => {
@@ -124,7 +140,7 @@ export default function ExerciseSelector({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="مثلاً اسکوات"
-              className="h-10 text-right"
+              className="h-10 text-right  rounded-xl border border-[rgb(125,211,252)] bg-white focus:outline-none "
             />
           </div>
         </div>
@@ -174,9 +190,25 @@ export default function ExerciseSelector({
                             </span>
                           )}
                         </div>
+                        {isSelected && (
+                          <div className="flex flex-col gap-1">
+                            <div className="text-xs text-muted-foreground">
+                              تعداد: {isSelected.sets || "-"} | تکرار: {isSelected.reps || "-"}
+                            </div>
+                            {isSelected.description && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                <span className="text-primary-600 font-medium ml-1">توضیحات:</span>
+                                {isSelected.description.length > 50 
+                                  ? `${isSelected.description.slice(0, 50)}...` 
+                                  : isSelected.description
+                                }
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
 
-                      {isSelected && (
+                      {/* {isSelected && (
                         <div className="flex items-center gap-4">
                           <div className="flex flex-col items-center">
                             <Label className="text-xs mb-1.5 text-muted-foreground">تعداد ست</Label>
@@ -203,7 +235,7 @@ export default function ExerciseSelector({
                             />
                           </div>
                         </div>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 );
@@ -237,12 +269,59 @@ export default function ExerciseSelector({
         </div>
         <Button
           onClick={() => onSave(selected)}
-          className="bg-primary hover:bg-primary/90"
+          className="bg-primary-600 hover:bg-primary-700 text-white"
           disabled={selected.length === 0}
         >
           ذخیره تمرینات
         </Button>
       </div>
+
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
+        <div className="p-4 space-y-4 dark:text-white dark:bg-gray-700" >
+          <h3 className="text-lg font-semibold dark:text-white">تنظیم تعداد ست و تکرار</h3>
+          <div className="flex flex-col gap-4">
+            <Input
+              type="number"
+              placeholder="تعداد ست"
+              value={currentExercise?.sets || ""}
+              onChange={(e) =>
+                setCurrentExercise((prev) => ({ ...prev!, sets: e.target.value }))
+              }
+              className="w-full bg-white dark:bg-gray-700"
+            />
+            <Input
+              type="number"
+              placeholder="تعداد تکرار"
+              value={currentExercise?.reps || ""}
+              onChange={(e) =>
+                setCurrentExercise((prev) => ({ ...prev!, reps: e.target.value }))
+              }
+              className="w-full bg-white dark:bg-gray-700"
+            />
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">توضیحات تمرین</Label>
+              <textarea
+                placeholder="توضیحات مربوط به اجرای تمرین را وارد کنید..."
+                value={currentExercise?.description || ""}
+                onChange={(e) =>
+                  setCurrentExercise((prev) => ({ ...prev!, description: e.target.value }))
+                }
+                className="w-full min-h-[100px] p-3 rounded-lg border border-[rgb(125,211,252)] bg-white dark:bg-gray-700 focus:outline-none text-right"
+              />
+            </div>
+          </div>
+          <Button 
+            onClick={() => handleModalSave(
+              currentExercise?.sets || "", 
+              currentExercise?.reps || "",
+              currentExercise?.description
+            )} 
+            className="bg-blue-900 text-white dark:bg-blue-300"
+          >
+            تمام
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }
